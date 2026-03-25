@@ -1,0 +1,25 @@
+// This is your Prisma schema file.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+model Appointment {
+  id String @id @default(cuid())
+
+  patientName String
+  doctorName  String?
+
+  // Store appointment date/time
+  scheduledAt DateTime
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
