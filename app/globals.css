@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
   /* Stitch Design Tokens - Clinical Precision */
   --background: #f7f9fb;
   --foreground: #191c1e;

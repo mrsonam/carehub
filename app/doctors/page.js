@@ -96,119 +96,58 @@ export default function DoctorsPage() {
             </motion.p>
           </div>
 
-          {/* Search and Filter */}
-          <div className="max-w-4xl mx-auto mb-16 space-y-8">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="relative"
-            >
-              <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none text-foreground/30">
-                <Search size={22} />
-              </div>
-              <input
-                type="text"
-                placeholder="Search by name or specialty..."
-                className="w-full h-16 pl-16 pr-6 rounded-2xl bg-surface-low border-none focus:ring-2 focus:ring-primary/20 text-lg transition-all"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-wrap justify-center gap-3"
-            >
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                    activeCategory === cat 
-                    ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                    : "bg-surface-lowest text-foreground/60 hover:bg-surface-high"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </motion.div>
-          </div>
-
           {/* Doctors Grid */}
-          <motion.div 
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            <AnimatePresence>
-              {filteredDoctors.map((doctor, i) => (
-                <motion.div
-                  key={doctor.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3 }}
-                  className="rounded-[2.5rem] bg-surface-lowest tonal-card group cursor-pointer overflow-hidden border border-outline-variant/10"
-                >
-                  {/* Doctor Image Container */}
-                  <div className="aspect-[4/5] relative overflow-hidden">
-                    <Image
-                      src={doctor.image}
-                      alt={doctor.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <div className="absolute bottom-6 right-6">
-                      <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl flex items-center gap-2 shadow-xl">
-                        <Star className="text-yellow-500 fill-yellow-500" size={16} />
-                        <span className="text-sm font-black text-foreground">{doctor.rating}</span>
-                      </div>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            {allDoctors.map((doctor) => (
+              <motion.div
+                key={doctor.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="group flex flex-col"
+              >
+                {/* Doctor Image Container - Clean & Professional */}
+                <div className="aspect-[4/5] relative rounded-[2rem] overflow-hidden bg-surface-high mb-8 shadow-sm group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-500">
+                  <Image
+                    src={doctor.image}
+                    alt={doctor.name}
+                    fill
+                    className="object-cover"
+                  />
+                  {/* Subtle Tonal Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
 
-                  {/* Doctor Info */}
-                  <div className="p-8">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] uppercase font-black tracking-widest text-primary bg-primary/5 px-2 py-1 rounded-md">
-                        {doctor.specialty}
-                      </span>
-                      <div className="flex items-center gap-2 text-foreground/40 text-xs font-bold">
-                        <Clock size={14} />
-                        {doctor.experience} Exp.
-                      </div>
-                    </div>
-                    
-                    <h3 className="text-2xl font-black font-manrope text-foreground mb-3">{doctor.name}</h3>
-                    <p className="text-sm text-foreground/50 leading-relaxed mb-8 line-clamp-2">
-                      {doctor.bio}
-                    </p>
-
-                    <div className="space-y-4 pt-6 border-t border-outline-variant/10">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-bold text-foreground/40 uppercase tracking-widest text-[10px]">Availability</span>
-                        <span className="font-black text-green-600">{doctor.availability}</span>
-                      </div>
-                      
-                      <div className="flex gap-3">
-                        <button className="flex-1 bg-surface-low text-foreground font-bold py-3 rounded-xl hover:bg-surface-high transition-all text-sm cursor-pointer">
-                          View Profile
-                        </button>
-                        <button className="flex-1 bg-primary text-white font-black py-3 rounded-xl shadow-lg shadow-primary/20 hover:bg-primary-container transition-all text-sm flex items-center justify-center gap-2 cursor-pointer group">
-                          Book Now
-                          <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                        </button>
-                      </div>
-                    </div>
+                {/* Doctor Info - Content Focus */}
+                <div className="flex flex-col flex-grow">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-primary bg-primary/5 px-3 py-1.5 rounded-full">
+                      {doctor.specialty}
+                    </span>
+                    <div className="h-1 w-1 rounded-full bg-outline-variant/30" />
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-foreground/40">
+                      {doctor.experience} Exp.
+                    </span>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                  
+                  <h3 className="text-2xl font-black font-manrope text-foreground mb-4 tracking-tight leading-none group-hover:text-primary transition-colors">
+                    {doctor.name}
+                  </h3>
+                  
+                  <p className="text-base text-foreground/50 leading-relaxed mb-8 max-w-sm">
+                    {doctor.bio}
+                  </p>
+
+                  <div className="mt-auto pt-6 border-t border-outline-variant/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                       <span className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Available</span>
+                    </div>
+                    <span className="text-sm font-black text-primary">{doctor.availability.split(": ")[1]}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
 
           {/* Empty State */}
           {filteredDoctors.length === 0 && (
