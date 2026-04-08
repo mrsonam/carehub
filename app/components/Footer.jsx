@@ -47,11 +47,15 @@ export default function Footer() {
                   </div>
                 </div>
               </li>
-              {["About Our Doctors", "Clinic History", "Patient Rights"].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">{link}</Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/doctors" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">About Our Doctors</Link>
+              </li>
+              <li>
+                <Link href="#" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Clinic History</Link>
+              </li>
+              <li>
+                <Link href="#" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Patient Rights</Link>
+              </li>
             </ul>
           </div>
           
