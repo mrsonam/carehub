@@ -6,7 +6,7 @@ import { Clock, ShieldCheck, CalendarCheck } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-surface py-16 px-6 sm:py-24">
+    <section className="relative overflow-hidden bg-surface py-20 px-20 sm:py-32">
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
       

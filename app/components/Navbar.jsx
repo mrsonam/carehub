@@ -9,7 +9,7 @@ export default function Navbar() {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="sticky top-0 z-50 glass px-6 py-4 flex items-center justify-between"
+      className="sticky top-0 z-50 glass px-20 py-6 flex items-center justify-between"
     >
       <Link href="/" className="flex items-center gap-2 group">
         <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white transition-transform group-hover:scale-110">
@@ -21,8 +21,8 @@ export default function Navbar() {
       <div className="hidden md:flex items-center gap-8">
         {[
           { name: "Services", href: "/services" },
-          { name: "Doctors", href: "#doctors" },
-          { name: "About Us", href: "#about-us" },
+          { name: "Doctors", href: "/doctors" },
+          { name: "About Us", href: "/about" },
           { name: "Contact", href: "#contact" }
         ].map((item) => (
           <Link

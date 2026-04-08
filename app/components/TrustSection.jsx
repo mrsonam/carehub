@@ -5,7 +5,7 @@ import { Calendar, UserCheck, History, Award, CheckCircle2 } from "lucide-react"
 
 export default function TrustSection() {
   return (
-    <section id="about-us" className="py-24 bg-surface px-6 relative overflow-hidden">
+    <section id="about-us" className="py-24 bg-surface px-20 relative overflow-hidden">
       {/* Background Accent */}
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-secondary/5 rounded-full blur-[100px] -translate-x-1/2" />
       

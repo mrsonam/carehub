@@ -67,7 +67,7 @@ export default function DoctorsPage() {
     <div className="flex flex-col min-h-screen bg-surface">
       <Navbar />
 
-      <main className="flex-grow pt-16 pb-32 px-6">
+      <main className="flex-grow pt-20 pb-40 px-20">
         <div className="container mx-auto">
           {/* Header Section */}
           <div className="text-center max-w-3xl mx-auto mb-20">
@@ -103,7 +103,7 @@ export default function DoctorsPage() {
                 key={doctor.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group flex flex-col"
+                className="group flex flex-col tonal-card rounded-[2rem] p-4"
               >
                 {/* Doctor Image Container - Clean & Professional */}
                 <div className="aspect-[4/5] relative rounded-[2rem] overflow-hidden bg-surface-high mb-8 shadow-sm group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-500">

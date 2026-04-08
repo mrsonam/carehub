@@ -73,7 +73,7 @@ export default function ServicesPage() {
     <div className="flex flex-col min-h-screen bg-surface">
       <Navbar />
 
-      <main className="flex-grow pt-16 pb-32 px-6">
+      <main className="flex-grow pt-20 pb-40 px-20">
         <div className="container mx-auto">
           {/* Header Section */}
           <div className="text-center max-w-3xl mx-auto mb-20">
