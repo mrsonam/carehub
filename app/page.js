@@ -1,70 +1,61 @@
-import Image from "next/image";
+"use client";
 
-import HealthCheck from "./components/HealthCheck.client";
+import { motion } from "framer-motion";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import Specialties from "./components/Specialties";
+import TrustSection from "./components/TrustSection";
+import Footer from "./components/Footer";
+import { ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      
+      <main className="flex-grow">
+        <Hero />
+        
+        <Specialties />
+        
+        <TrustSection />
+        
+        {/* Final CTA Section */}
+        <section className="py-24 bg-surface px-6">
+          <div className="container mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-primary rounded-[3rem] p-12 md:p-20 text-center text-white relative overflow-hidden"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-
-        <HealthCheck />
-
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/8 px-5 transition-colors hover:border-transparent hover:bg-black/4 dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              {/* Decorative blobs */}
+              <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+              <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/20 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3" />
+              
+              <div className="relative z-10 max-w-3xl mx-auto">
+                <h2 className="text-4xl md:text-6xl font-black font-manrope mb-8 tracking-tight">
+                  Start Your Journey to <span className="text-secondary-container">Better Health</span> Today
+                </h2>
+                <p className="text-xl text-white/80 mb-12 leading-relaxed">
+                  Join thousands of patients who have simplified their healthcare management. Experience clinical coordination at your fingertips.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <button className="w-full sm:w-auto bg-white text-primary px-10 py-5 rounded-2xl text-xl font-black shadow-2xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 group">
+                    Create Appoinment
+                    <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button className="w-full sm:w-auto bg-primary-container/20 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-2xl text-xl font-bold hover:bg-white/10 transition-all">
+                    Register Facility
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
       </main>
+      
+      <Footer />
     </div>
   );
 }
