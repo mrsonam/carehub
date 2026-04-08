@@ -23,7 +23,7 @@ export default function Navbar() {
           { name: "Services", href: "/services" },
           { name: "Doctors", href: "/doctors" },
           { name: "About Us", href: "/about" },
-          { name: "Contact", href: "#contact" }
+          { name: "Contact", href: "/contact" }
         ].map((item) => (
           <Link
             key={item.name}

@@ -19,18 +19,18 @@ export default function Footer() {
               Serving our community with reliable, clinical care. Your health journey, simplified.
             </p>
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 text-foreground/60 text-sm">
+              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
                 <MapPin size={16} className="text-primary" />
                 <span>123 Medical Drive, Health Plaza</span>
-              </div>
-              <div className="flex items-center gap-3 text-foreground/60 text-sm">
+              </Link>
+              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
                 <Phone size={16} className="text-primary" />
                 <span>(02) 5555 1234</span>
-              </div>
-              <div className="flex items-center gap-3 text-foreground/60 text-sm">
+              </Link>
+              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
                 <Mail size={16} className="text-primary" />
                 <span>contact@carehubclinic.com</span>
-              </div>
+              </Link>
             </div>
           </div>
           
@@ -54,7 +54,7 @@ export default function Footer() {
                 <Link href="/about" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Clinic History</Link>
               </li>
               <li>
-                <Link href="#" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Patient Rights</Link>
+                <Link href="/contact" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Get in Touch</Link>
               </li>
             </ul>
           </div>
