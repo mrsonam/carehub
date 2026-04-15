@@ -44,7 +44,7 @@ const item = {
 
 export default function Specialties() {
   return (
-    <section id="services" className="py-24 bg-surface-low px-6">
+    <section id="services" className="py-24 bg-surface-low px-20">
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-extrabold font-manrope text-foreground mb-4">Our Core Clinical Services</h2>

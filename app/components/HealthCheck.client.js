@@ -39,12 +39,12 @@ export default function HealthCheck() {
   }, []);
 
   return (
-    <div className="w-full mt-10 p-5 rounded-xl border border-zinc-200 bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800">
-      <div className="text-sm text-zinc-600 dark:text-zinc-300">
+    <div className="w-full mt-10 p-5 rounded-xl border border-zinc-200 bg-zinc-50">
+      <div className="text-sm text-zinc-600">
         Supabase connection check (Prisma)
       </div>
 
-      <div className="mt-2 text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+      <div className="mt-2 text-lg font-semibold text-zinc-950">
         {status.ok === null
           ? "Checking..."
           : status.ok
@@ -53,7 +53,7 @@ export default function HealthCheck() {
       </div>
 
       {status.error ? (
-        <div className="mt-2 text-sm text-red-600 dark:text-red-400 wrap-break-word">
+        <div className="mt-2 text-sm text-red-600 wrap-break-word">
           {status.error}
         </div>
       ) : null}

@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-surface-low pt-20 pb-10 px-6 border-t border-outline-variant/10">
+    <footer className="bg-surface-low pt-24 pb-12 px-20 border-t border-outline-variant/10">
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="flex flex-col gap-6">
@@ -19,18 +19,18 @@ export default function Footer() {
               Serving our community with reliable, clinical care. Your health journey, simplified.
             </p>
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 text-foreground/60 text-sm">
+              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
                 <MapPin size={16} className="text-primary" />
                 <span>123 Medical Drive, Health Plaza</span>
-              </div>
-              <div className="flex items-center gap-3 text-foreground/60 text-sm">
+              </Link>
+              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
                 <Phone size={16} className="text-primary" />
                 <span>(02) 5555 1234</span>
-              </div>
-              <div className="flex items-center gap-3 text-foreground/60 text-sm">
+              </Link>
+              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
                 <Mail size={16} className="text-primary" />
                 <span>contact@carehubclinic.com</span>
-              </div>
+              </Link>
             </div>
           </div>
           
@@ -47,11 +47,15 @@ export default function Footer() {
                   </div>
                 </div>
               </li>
-              {["About Our Doctors", "Clinic History", "Patient Rights"].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">{link}</Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/doctors" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">About Our Doctors</Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Clinic History</Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Get in Touch</Link>
+              </li>
             </ul>
           </div>
           
