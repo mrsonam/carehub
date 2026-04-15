@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { 
   Heart, Baby, Activity, 
   Search, ArrowRight, ShieldCheck, Plus,
@@ -71,8 +69,6 @@ export default function ServicesPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-surface">
-      <Navbar />
-
       <main className="flex-grow pt-20 pb-40 px-20">
         <div className="container mx-auto">
           {/* Header Section */}
@@ -206,8 +202,6 @@ export default function ServicesPage() {
           </motion.div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

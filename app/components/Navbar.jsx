@@ -3,8 +3,58 @@
 import { motion } from "framer-motion";
 import { Activity } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      setLoading(true);
+      fetch("/api/auth/me", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return;
+          setUser(data?.user ?? null);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setUser(null);
+        })
+        .finally(() => {
+          if (cancelled) return;
+          setLoading(false);
+        });
+    };
+
+    const onAuthChanged = () => load();
+    window.addEventListener("auth-changed", onAuthChanged);
+    window.addEventListener("focus", onAuthChanged);
+
+    load();
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("auth-changed", onAuthChanged);
+      window.removeEventListener("focus", onAuthChanged);
+    };
+  }, [pathname]);
+
+  const handleSignOut = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setUser(null);
+      router.push("/");
+      router.refresh();
+    }
+  };
+
   return (
     <motion.nav 
       initial={{ y: -100 }}
@@ -36,12 +86,37 @@ export default function Navbar() {
       </div>
       
       <div className="flex items-center gap-4">
-        <button className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer">
-          Sign In
-        </button>
-        <button className="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-primary-container transition-all cursor-pointer">
-          Book Appointment
-        </button>
+        {!loading && user ? (
+          <>
+            <Link
+              href="/dashboard"
+              className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              Dashboard
+            </Link>
+            <button
+              onClick={handleSignOut}
+              className="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-primary-container transition-all cursor-pointer"
+            >
+              Sign out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/login"
+              className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/register"
+              className="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-primary-container transition-all"
+            >
+              Register
+            </Link>
+          </>
+        )}
       </div>
     </motion.nav>
   );

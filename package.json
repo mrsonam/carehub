@@ -7,14 +7,20 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
     "build": "prisma generate && next build",
     "start": "next start"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
+    "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
+    "jose": "^6.2.2",
     "lucide-react": "^1.7.0",
     "next": "16.2.0",
     "pg": "^8.17.2",

@@ -1,8 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { 
   Phone, Mail, MapPin, 
   Clock, Send, ArrowRight,
@@ -11,11 +9,8 @@ import {
 
 export default function ContactPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-surface">
-      <Navbar />
-
-      <main className="flex-grow pt-20 pb-40 px-20">
-        <div className="container mx-auto">
+    <div className="bg-surface pt-20 pb-40 px-20">
+      <div className="container mx-auto">
           {/* Header Section */}
           <div className="text-center max-w-4xl mx-auto mb-24">
             <motion.div
@@ -190,9 +185,6 @@ export default function ContactPage() {
             </div>
           </div>
         </div>
-      </main>
-
-      <Footer />
     </div>
   );
 }
