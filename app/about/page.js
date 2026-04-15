@@ -1,8 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import { 
@@ -13,10 +11,8 @@ import {
 
 export default function AboutPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-surface">
-      <Navbar />
-
-      <main className="flex-grow pt-20 pb-40 px-20">
+    <div className="bg-surface pt-20 pb-40 px-20">
+      <div>
         <div className="container mx-auto">
           {/* Hero Section */}
           <div className="text-center max-w-4xl mx-auto mb-24">
@@ -164,9 +160,7 @@ export default function AboutPage() {
             </div>
           </motion.div>
         </div>
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 }
