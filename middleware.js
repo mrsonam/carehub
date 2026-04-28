@@ -2,18 +2,46 @@ import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 
 const ROLE_HOME = {
-  ADMIN: "/dashboard/admin",
-  DOCTOR: "/dashboard/doctor",
-  PATIENT: "/dashboard/patient",
+  ADMIN: "/admin/dashboard",
+  DOCTOR: "/doctor/dashboard",
+  PATIENT: "/patient/dashboard",
+};
+
+const ROLE_ROOT = {
+  ADMIN: "/admin",
+  DOCTOR: "/doctor",
+  PATIENT: "/patient",
 };
 
 function isUnderRoleArea(pathname, base) {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
+function isProtectedPath(pathname) {
+  return ["/dashboard", "/admin", "/doctor", "/patient"].some((base) =>
+    isUnderRoleArea(pathname, base)
+  );
+}
+
+function legacyDashboardRedirect(pathname) {
+  const legacy = [
+    { from: "/dashboard/admin", to: "/admin" },
+    { from: "/dashboard/doctor", to: "/doctor" },
+    { from: "/dashboard/patient", to: "/patient" },
+  ];
+
+  for (const item of legacy) {
+    if (!isUnderRoleArea(pathname, item.from)) continue;
+    if (pathname === item.from) return `${item.to}/dashboard`;
+    return `${item.to}${pathname.slice(item.from.length)}`;
+  }
+
+  return null;
+}
+
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
-  if (!pathname.startsWith("/dashboard")) {
+  if (!isProtectedPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -75,11 +103,16 @@ export async function middleware(req) {
     return NextResponse.redirect(new URL("/dashboard/setup/profile", req.url));
   }
 
+  const legacyPath = legacyDashboardRedirect(pathname);
+  if (legacyPath) {
+    return NextResponse.redirect(new URL(legacyPath, req.url));
+  }
+
   if (pathname === "/dashboard" || pathname === "/dashboard/") {
     return NextResponse.next();
   }
 
-  const allowed = isUnderRoleArea(pathname, home);
+  const allowed = isUnderRoleArea(pathname, ROLE_ROOT[role]);
   if (!allowed) {
     return NextResponse.redirect(new URL(home, req.url));
   }
@@ -88,5 +121,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/doctor/:path*", "/patient/:path*"],
 };

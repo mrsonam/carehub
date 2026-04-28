@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useToast } from "@/app/components/toast/ToastProvider";
 
 export default function RegisterForm() {
   const router = useRouter();
+  const toast = useToast();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
 
@@ -16,7 +18,7 @@ export default function RegisterForm() {
     confirmPassword: "",
   });
 
-  const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -25,21 +27,26 @@ export default function RegisterForm() {
       ...prev,
       [name]: value,
     }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setMessage("");
+    setErrors({});
 
     const { name, email, password, confirmPassword } = formData;
+    const nextErrors = {};
 
-    if (!name || !email || !password || !confirmPassword) {
-      setMessage("Please fill in all fields.");
-      return;
-    }
+    if (!name.trim()) nextErrors.name = "Full name is required.";
+    if (!email.trim()) nextErrors.email = "Email is required.";
+    else if (!/^\S+@\S+\.\S+$/.test(email.trim())) nextErrors.email = "Enter a valid email.";
+    if (!password) nextErrors.password = "Password is required.";
+    else if (password.length < 8) nextErrors.password = "Use at least 8 characters.";
+    if (!confirmPassword) nextErrors.confirmPassword = "Please confirm your password.";
+    else if (password !== confirmPassword) nextErrors.confirmPassword = "Passwords do not match.";
 
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -59,7 +66,7 @@ export default function RegisterForm() {
         router.refresh();
       })
       .catch((err) => {
-        setMessage(err instanceof Error ? err.message : "Registration failed.");
+        toast.error(err instanceof Error ? err.message : "Registration failed.");
       })
       .finally(() => setLoading(false));
   };
@@ -76,41 +83,65 @@ export default function RegisterForm() {
               type="text"
               name="name"
               placeholder="Full Name"
-              className="w-full p-3 border rounded-lg"
+              className={`w-full p-3 border rounded-lg outline-none focus:ring-2 ${
+                errors.name
+                  ? "border-red-500 bg-red-50/60 focus:ring-red-500/25"
+                  : "border-primary/[0.15] focus:ring-primary/20"
+              }`}
               value={formData.name}
               onChange={handleChange}
               required
             />
+            {errors.name ? <p className="text-xs text-red-600 -mt-2">{errors.name}</p> : null}
 
             <input
               type="email"
               name="email"
               placeholder="Email Address"
-              className="w-full p-3 border rounded-lg"
+              className={`w-full p-3 border rounded-lg outline-none focus:ring-2 ${
+                errors.email
+                  ? "border-red-500 bg-red-50/60 focus:ring-red-500/25"
+                  : "border-primary/[0.15] focus:ring-primary/20"
+              }`}
               value={formData.email}
               onChange={handleChange}
               required
             />
+            {errors.email ? <p className="text-xs text-red-600 -mt-2">{errors.email}</p> : null}
 
             <input
               type="password"
               name="password"
               placeholder="Password"
-              className="w-full p-3 border rounded-lg"
+              className={`w-full p-3 border rounded-lg outline-none focus:ring-2 ${
+                errors.password
+                  ? "border-red-500 bg-red-50/60 focus:ring-red-500/25"
+                  : "border-primary/[0.15] focus:ring-primary/20"
+              }`}
               value={formData.password}
               onChange={handleChange}
               required
             />
+            {errors.password ? (
+              <p className="text-xs text-red-600 -mt-2">{errors.password}</p>
+            ) : null}
 
             <input
               type="password"
               name="confirmPassword"
               placeholder="Confirm Password"
-              className="w-full p-3 border rounded-lg"
+              className={`w-full p-3 border rounded-lg outline-none focus:ring-2 ${
+                errors.confirmPassword
+                  ? "border-red-500 bg-red-50/60 focus:ring-red-500/25"
+                  : "border-primary/[0.15] focus:ring-primary/20"
+              }`}
               value={formData.confirmPassword}
               onChange={handleChange}
               required
             />
+            {errors.confirmPassword ? (
+              <p className="text-xs text-red-600 -mt-2">{errors.confirmPassword}</p>
+            ) : null}
 
             <button
               type="submit"
@@ -120,8 +151,6 @@ export default function RegisterForm() {
               {loading ? "Creating account..." : "Register"}
             </button>
           </form>
-
-          {message && <p className="text-center text-sm text-red-600 mt-4">{message}</p>}
 
           <p className="text-center text-sm mt-4">
             Already have an account?{" "}

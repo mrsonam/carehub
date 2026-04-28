@@ -11,8 +11,7 @@ export default async function DashboardIndex() {
 
   if (!session) redirect("/login?next=/dashboard");
 
-  if (session.role === "ADMIN") redirect("/dashboard/admin");
-  if (session.role === "DOCTOR") redirect("/dashboard/doctor");
-  redirect("/dashboard/patient");
+  if (session.role === "ADMIN") redirect("/admin/dashboard");
+  if (session.role === "DOCTOR") redirect("/doctor/dashboard");
+  redirect("/patient/dashboard");
 }
-

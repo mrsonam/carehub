@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, ArrowRight, ShieldCheck } from "lucide-react";
+import { useToast } from "@/app/components/toast/ToastProvider";
 
 const container = {
   hidden: { opacity: 0 },
@@ -18,17 +19,23 @@ const item = {
 };
 
 const ROLE_HOME = {
-  ADMIN: "/dashboard/admin",
-  DOCTOR: "/dashboard/doctor",
-  PATIENT: "/dashboard/patient",
+  ADMIN: "/admin/dashboard",
+  DOCTOR: "/doctor/dashboard",
+  PATIENT: "/patient/dashboard",
 };
 
 export default function SetupPasswordForm({ userRole }) {
+  const toast = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [pending, setPending] = useState(false);
+  const checks = [
+    { label: "At least 8 characters", ok: newPassword.length >= 8 },
+    { label: "Matches confirmation", ok: newPassword.length > 0 && newPassword === confirm },
+    { label: "Different from current", ok: newPassword.length > 0 && newPassword !== currentPassword },
+  ];
 
   const finishRedirect = () => {
     if (userRole === "DOCTOR") {
@@ -40,13 +47,15 @@ export default function SetupPasswordForm({ userRole }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    setError("");
-    if (newPassword !== confirm) {
-      setError("New passwords do not match.");
-      return;
-    }
-    if (newPassword.length < 8) {
-      setError("Use at least 8 characters for your new password.");
+    const nextErrors = {};
+    if (!currentPassword) nextErrors.currentPassword = "Current password is required.";
+    if (!newPassword) nextErrors.newPassword = "New password is required.";
+    else if (newPassword.length < 8) nextErrors.newPassword = "Use at least 8 characters.";
+    else if (newPassword === currentPassword) nextErrors.newPassword = "Use a different password.";
+    if (!confirm) nextErrors.confirm = "Please confirm your new password.";
+    else if (newPassword !== confirm) nextErrors.confirm = "New passwords do not match.";
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
     if (pending) return;
@@ -59,9 +68,10 @@ export default function SetupPasswordForm({ userRole }) {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        setError(data.error || "Could not update password.");
+        toast.error(data.error || "Could not update password.");
         return;
       }
+      toast.success("Password updated.");
       finishRedirect();
     } finally {
       setPending(false);
@@ -69,13 +79,13 @@ export default function SetupPasswordForm({ userRole }) {
   };
 
   return (
-    <motion.div
+    <motion.section
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
-      className="w-full"
+      className="w-full max-w-xl"
     >
-      <div className="mb-8 text-center sm:text-left">
+      <div className="mb-7 text-center sm:text-left">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -117,9 +127,19 @@ export default function SetupPasswordForm({ userRole }) {
               required
               autoComplete="current-password"
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="h-11 px-3 rounded-lg bg-surface-low border border-primary/[0.1] text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              onChange={(e) => {
+                setCurrentPassword(e.target.value);
+                setErrors((prev) => ({ ...prev, currentPassword: "" }));
+              }}
+              className={`h-11 px-3 rounded-lg bg-surface-low border text-sm outline-none focus:ring-2 ${
+                errors.currentPassword
+                  ? "border-red-500 bg-red-50/50 focus:ring-red-500/25"
+                  : "border-primary/[0.1] focus:ring-primary/20"
+              }`}
             />
+            {errors.currentPassword ? (
+              <p className="text-xs text-red-600">{errors.currentPassword}</p>
+            ) : null}
           </motion.div>
           <motion.div variants={item} className="flex flex-col gap-1.5">
             <label
@@ -135,9 +155,19 @@ export default function SetupPasswordForm({ userRole }) {
               minLength={8}
               autoComplete="new-password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="h-11 px-3 rounded-lg bg-surface-low border border-primary/[0.1] text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                setErrors((prev) => ({ ...prev, newPassword: "" }));
+              }}
+              className={`h-11 px-3 rounded-lg bg-surface-low border text-sm outline-none focus:ring-2 ${
+                errors.newPassword
+                  ? "border-red-500 bg-red-50/50 focus:ring-red-500/25"
+                  : "border-primary/[0.1] focus:ring-primary/20"
+              }`}
             />
+            {errors.newPassword ? (
+              <p className="text-xs text-red-600">{errors.newPassword}</p>
+            ) : null}
           </motion.div>
           <motion.div variants={item} className="flex flex-col gap-1.5">
             <label
@@ -153,20 +183,34 @@ export default function SetupPasswordForm({ userRole }) {
               minLength={8}
               autoComplete="new-password"
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="h-11 px-3 rounded-lg bg-surface-low border border-primary/[0.1] text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              onChange={(e) => {
+                setConfirm(e.target.value);
+                setErrors((prev) => ({ ...prev, confirm: "" }));
+              }}
+              className={`h-11 px-3 rounded-lg bg-surface-low border text-sm outline-none focus:ring-2 ${
+                errors.confirm
+                  ? "border-red-500 bg-red-50/50 focus:ring-red-500/25"
+                  : "border-primary/[0.1] focus:ring-primary/20"
+              }`}
             />
+            {errors.confirm ? <p className="text-xs text-red-600">{errors.confirm}</p> : null}
           </motion.div>
         </motion.div>
 
-        {error ? (
-          <p
-            className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200/80 rounded-lg px-3 py-2"
-            role="alert"
-          >
-            {error}
-          </p>
-        ) : null}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {checks.map((check) => (
+            <span
+              key={check.label}
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
+                check.ok
+                  ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+                  : "bg-surface-low text-foreground/55 border-primary/[0.1]"
+              }`}
+            >
+              {check.label}
+            </span>
+          ))}
+        </div>
 
         <motion.button
           type="submit"
@@ -178,6 +222,6 @@ export default function SetupPasswordForm({ userRole }) {
           {!pending ? <ArrowRight size={16} /> : null}
         </motion.button>
       </form>
-    </motion.div>
+    </motion.section>
   );
 }

@@ -26,10 +26,11 @@ async function main() {
     { name: "Patient User", email: "patient@carehub.local", role: "PATIENT" },
   ];
 
+  const seededUsers = {};
   for (const u of users) {
     const profileDone =
       u.role === "DOCTOR" || u.role === "ADMIN" ? new Date() : null;
-    await prisma.user.upsert({
+    seededUsers[u.role] = await prisma.user.upsert({
       where: { email: u.email },
       update: {
         name: u.name,
@@ -49,6 +50,43 @@ async function main() {
         profileCompletedAt: profileDone,
       },
     });
+  }
+
+  const existingAppointments = await prisma.appointment.count();
+  if (existingAppointments === 0) {
+    const now = new Date();
+    const appointmentFixtures = [
+      {
+        patientId: seededUsers.PATIENT.id,
+        doctorId: seededUsers.DOCTOR.id,
+        patientName: seededUsers.PATIENT.name,
+        doctorName: seededUsers.DOCTOR.name,
+        status: "CONFIRMED",
+        scheduledAt: new Date(now.getTime() + 2 * 60 * 60 * 1000),
+        patientNotes: "Annual check-in and care plan review.",
+      },
+      {
+        patientId: seededUsers.PATIENT.id,
+        doctorId: seededUsers.DOCTOR.id,
+        patientName: seededUsers.PATIENT.name,
+        doctorName: seededUsers.DOCTOR.name,
+        status: "REQUESTED",
+        scheduledAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
+        patientNotes: "Follow-up on recent bloodwork.",
+      },
+      {
+        patientId: seededUsers.PATIENT.id,
+        doctorId: seededUsers.DOCTOR.id,
+        patientName: seededUsers.PATIENT.name,
+        doctorName: seededUsers.DOCTOR.name,
+        status: "COMPLETED",
+        scheduledAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+        patientNotes: "Routine visit completed.",
+        doctorNotes: "No acute concerns. Continue current care plan.",
+      },
+    ];
+
+    await prisma.appointment.createMany({ data: appointmentFixtures });
   }
 
   console.log("Seeded users:");

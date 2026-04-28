@@ -6,7 +6,13 @@ import { usePathname } from "next/navigation";
 
 export default function Footer() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/dashboard")) return null;
+  const hideForAppShell =
+    pathname != null &&
+    /^(\/dashboard|\/admin|\/doctor|\/patient)(\/|$)/.test(pathname);
+
+  if (hideForAppShell) {
+    return null;
+  }
 
   return (
     <footer className="bg-surface-low pt-24 pb-12 px-20 border-t border-outline-variant/10">

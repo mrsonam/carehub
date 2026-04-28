@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Phone, Stethoscope, FileText, Sparkles, Check } from "lucide-react";
+import { useToast } from "@/app/components/toast/ToastProvider";
 
 const steps = [
   { id: 1, label: "Role" },
@@ -17,11 +18,12 @@ const slideFade = {
 };
 
 export default function SetupProfileWizard({ userName, userEmail }) {
+  const toast = useToast();
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [pending, setPending] = useState(false);
 
   const go = (n) => {
@@ -29,10 +31,13 @@ export default function SetupProfileWizard({ userName, userEmail }) {
   };
 
   const submitFinal = async () => {
-    setError("");
+    setErrors({});
     if (pending) return;
-    if (!title.trim() || !phone.trim()) {
-      setError("Title and phone are required.");
+    const nextErrors = {};
+    if (!title.trim()) nextErrors.title = "Title is required.";
+    if (!phone.trim()) nextErrors.phone = "Phone is required.";
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
     setPending(true);
@@ -44,9 +49,10 @@ export default function SetupProfileWizard({ userName, userEmail }) {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        setError(data.error || "Could not save profile.");
+        toast.error(data.error || "Could not save profile.");
         return;
       }
+      toast.success("Profile saved.");
       go(3);
     } finally {
       setPending(false);
@@ -54,11 +60,11 @@ export default function SetupProfileWizard({ userName, userEmail }) {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-2xl">
       <motion.header
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center sm:text-left mb-10"
+        className="text-center sm:text-left mb-8"
       >
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
           One-time setup
@@ -119,7 +125,7 @@ export default function SetupProfileWizard({ userName, userEmail }) {
         })}
       </div>
 
-      <div className="panel p-6 sm:p-8 min-h-[320px] relative overflow-hidden">
+      <div className="panel p-6 sm:p-8 min-h-[340px] relative overflow-hidden">
         <AnimatePresence mode="wait">
           {step === 1 ? (
             <motion.div
@@ -140,10 +146,18 @@ export default function SetupProfileWizard({ userName, userEmail }) {
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setErrors((prev) => ({ ...prev, title: "" }));
+                }}
                 placeholder="e.g. MD, FRACGP"
-                className="h-11 px-3 rounded-lg bg-surface-low border border-primary/[0.1] text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className={`h-11 px-3 rounded-lg bg-surface-low border text-sm outline-none focus:ring-2 ${
+                  errors.title
+                    ? "border-red-500 bg-red-50/50 focus:ring-red-500/25"
+                    : "border-primary/[0.1] focus:ring-primary/20"
+                }`}
               />
+              {errors.title ? <p className="text-xs text-red-600">{errors.title}</p> : null}
               <div className="flex items-center gap-2 text-primary pt-2">
                 <Phone size={18} />
                 <span className="text-sm font-bold font-manrope">Direct phone</span>
@@ -151,19 +165,30 @@ export default function SetupProfileWizard({ userName, userEmail }) {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  setErrors((prev) => ({ ...prev, phone: "" }));
+                }}
                 placeholder="Clinic or mobile number for care team"
-                className="h-11 px-3 rounded-lg bg-surface-low border border-primary/[0.1] text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className={`h-11 px-3 rounded-lg bg-surface-low border text-sm outline-none focus:ring-2 ${
+                  errors.phone
+                    ? "border-red-500 bg-red-50/50 focus:ring-red-500/25"
+                    : "border-primary/[0.1] focus:ring-primary/20"
+                }`}
               />
+              {errors.phone ? <p className="text-xs text-red-600">{errors.phone}</p> : null}
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   if (!title.trim() || !phone.trim()) {
-                    setError("Please add your title and phone.");
+                    setErrors({
+                      title: !title.trim() ? "Title is required." : "",
+                      phone: !phone.trim() ? "Phone is required." : "",
+                    });
                     return;
                   }
-                  setError("");
+                  setErrors({});
                   go(2);
                 }}
                 className="mt-2 h-12 rounded-xl bg-primary text-white text-sm font-semibold shadow-md shadow-primary/20 hover:bg-primary-container transition-colors"
@@ -196,16 +221,11 @@ export default function SetupProfileWizard({ userName, userEmail }) {
                 placeholder="E.g. Chronic disease, preventive care, and shared decision-making. Languages: English, Hindi."
                 className="w-full px-3 py-2.5 rounded-lg bg-surface-low border border-primary/[0.1] text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-y min-h-[120px]"
               />
-              {error ? (
-                <p className="text-sm text-red-600" role="alert">
-                  {error}
-                </p>
-              ) : null}
               <div className="flex gap-2 mt-2">
                 <button
                   type="button"
                   onClick={() => {
-                    setError("");
+                    setErrors({});
                     go(1);
                   }}
                   className="flex-1 h-12 rounded-xl border border-primary/[0.12] text-sm font-semibold text-foreground/80 hover:bg-surface-low transition-colors"
@@ -251,7 +271,7 @@ export default function SetupProfileWizard({ userName, userEmail }) {
                 type="button"
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
-                  window.location.assign("/dashboard/doctor");
+                  window.location.assign("/doctor/dashboard");
                 }}
                 className="mt-8 h-12 px-8 rounded-xl bg-primary text-white text-sm font-semibold shadow-lg shadow-primary/20 hover:bg-primary-container transition-colors"
               >

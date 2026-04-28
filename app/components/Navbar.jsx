@@ -85,7 +85,13 @@ export default function Navbar() {
     }
   };
 
-  if (pathname?.startsWith("/dashboard")) return null;
+  const hideForAppShell =
+    pathname != null &&
+    /^(\/dashboard|\/admin|\/doctor|\/patient)(\/|$)/.test(pathname);
+
+  if (hideForAppShell) {
+    return null;
+  }
 
   return (
     <>
