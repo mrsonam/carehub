@@ -22,6 +22,17 @@ model User {
   passwordHash String
   role         UserRole @default(PATIENT)
 
+  /// Invited or staff accounts must change the initial password on first sign-in
+  mustChangePassword Boolean @default(false)
+
+  phone String?
+  /// Professional / display title (e.g. MD, Clinical Lead)
+  title String?
+  bio   String?
+
+  /// Set when a doctor (or other role) finishes the profile wizard
+  profileCompletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

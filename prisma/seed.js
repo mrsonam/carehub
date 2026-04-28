@@ -27,10 +27,27 @@ async function main() {
   ];
 
   for (const u of users) {
+    const profileDone =
+      u.role === "DOCTOR" || u.role === "ADMIN" ? new Date() : null;
     await prisma.user.upsert({
       where: { email: u.email },
-      update: { name: u.name, role: u.role, passwordHash },
-      create: { name: u.name, email: u.email, role: u.role, passwordHash },
+      update: {
+        name: u.name,
+        role: u.role,
+        passwordHash,
+        mustChangePassword: false,
+        ...(u.role === "DOCTOR" || u.role === "ADMIN"
+          ? { profileCompletedAt: profileDone }
+          : {}),
+      },
+      create: {
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        passwordHash,
+        mustChangePassword: false,
+        profileCompletedAt: profileDone,
+      },
     });
   }
 
