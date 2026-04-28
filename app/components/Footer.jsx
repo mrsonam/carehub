@@ -2,8 +2,18 @@
 
 import { Activity, Mail, Phone, MapPin, Clock } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const hideForAppShell =
+    pathname != null &&
+    /^(\/dashboard|\/admin|\/doctor|\/patient)(\/|$)/.test(pathname);
+
+  if (hideForAppShell) {
+    return null;
+  }
+
   return (
     <footer className="bg-surface-low pt-24 pb-12 px-20 border-t border-outline-variant/10">
       <div className="container mx-auto">

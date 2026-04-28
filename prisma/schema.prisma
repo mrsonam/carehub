@@ -15,12 +15,37 @@ enum UserRole {
   ADMIN
 }
 
+enum AppointmentStatus {
+  REQUESTED
+  CONFIRMED
+  ONGOING
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
   email        String   @unique
   passwordHash String
   role         UserRole @default(PATIENT)
+
+  /// Invited or staff accounts must change the initial password on first sign-in
+  mustChangePassword Boolean @default(false)
+
+  phone String?
+  /// Professional / display title (e.g. MD, Clinical Lead)
+  title String?
+  bio   String?
+
+  /// Set when a doctor (or other role) finishes the profile wizard
+  profileCompletedAt DateTime?
+
+  patientAppointments Appointment[] @relation("PatientAppointments")
+  doctorAppointments  Appointment[] @relation("DoctorAppointments")
+  availabilityRules    DoctorAvailabilityRule[]
+  availabilityOverrides DoctorAvailabilityOverride[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -29,14 +54,76 @@ model User {
 model Appointment {
   id String @id @default(cuid())
 
+  patientId String?
+  doctorId  String?
+
   patientName String
   doctorName  String?
 
+  status AppointmentStatus @default(REQUESTED)
+  confirmedAt     DateTime?
+  confirmedById   String?
+  confirmedByName String?
+  consultationStartedAt DateTime?
+  consultationEndedAt   DateTime?
+
   // Store appointment date/time
   scheduledAt DateTime
-  notes       String?
+  durationMinutes Int @default(15)
+  /// Patient-submitted reason/problem for the visit.
+  patientNotes String?
+  /// Doctor-authored consultation notes, suggestions, and prescriptions.
+  doctorNotes  String?
+  /// Legacy notes field retained for existing rows until data is migrated.
+  notes        String?
+
+  patient User? @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: SetNull)
+  doctor  User? @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model DoctorAvailabilityRule {
+  id String @id @default(cuid())
+
+  doctorId String
+  /// 0 = Sunday, 1 = Monday, ... 6 = Saturday
+  weekday Int
+  /// Minutes after midnight, e.g. 540 = 09:00
+  startMinutes Int
+  endMinutes   Int
+  slotMinutes  Int @default(30)
+
+  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([doctorId, weekday])
+}
+
+model DoctorAvailabilityOverride {
+  id String @id @default(cuid())
+
+  doctorId String
+  /// Store normalized date at local midnight for date-specific overrides.
+  date DateTime
+  isUnavailable Boolean @default(false)
+  startMinutes Int?
+  endMinutes   Int?
+  slotMinutes  Int @default(30)
+
+  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([doctorId, date])
 }
 
