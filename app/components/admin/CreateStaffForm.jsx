@@ -38,9 +38,15 @@ export default function CreateStaffForm() {
         toast.error(data.error || "Could not create account.");
         return;
       }
-      toast.success(
-        `Created ${data.user?.name} (${data.user?.role === "ADMIN" ? "Admin" : "Doctor"}). They can sign in with this email.`
-      );
+      const roleLabel = data.user?.role === "ADMIN" ? "Admin" : "Doctor";
+      if (data.emailWarning) {
+        toast.success(`Created ${data.user?.name} (${roleLabel}).`);
+        toast.error(`Welcome email could not be sent: ${data.emailWarning}`);
+      } else {
+        toast.success(
+          `Created ${data.user?.name} (${roleLabel}). A welcome email with the temporary password and next steps was sent.`
+        );
+      }
       setName("");
       setEmail("");
       setPassword("");
@@ -59,8 +65,8 @@ export default function CreateStaffForm() {
       <div>
         <h2 className="text-lg font-bold font-manrope">Create staff account</h2>
         <p className="text-sm text-foreground/55 mt-1">
-          New admins and doctors receive a password you set; share it securely. They
-          should sign in and change it when your clinic enables that.
+          The new team member receives an email with the temporary password, sign-in link,
+          and steps to set a new password. Keep the password confidential until they confirm access.
         </p>
       </div>
 
