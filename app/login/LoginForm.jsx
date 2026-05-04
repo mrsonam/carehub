@@ -39,49 +39,87 @@ export default function LoginForm() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-2">Sign In</h1>
-        <p className="text-gray-500 text-center mb-6">Welcome back to Healthcare Booking</p>
+    <div className="flex min-h-screen flex-col bg-surface">
+      <main className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="grid w-full max-w-5xl grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-10">
+          {/* Form column */}
+          <div className="mx-auto w-full max-w-md rounded-xl bg-surface-lowest p-8 shadow-lg lg:mx-0">
+            <div className="mb-6 text-center">
+              <span className="mb-3 inline-flex rounded-full bg-primary/5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+                CareHub
+              </span>
+              <h1 className="mb-2 text-3xl font-extrabold font-manrope text-foreground">Sign In</h1>
+              <p className="text-sm text-foreground/60">Welcome back to Healthcare Booking</p>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full p-3 border rounded-lg"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-foreground/80">Email</span>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="w-full rounded-lg border border-outline-variant/40 bg-surface-lowest px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </label>
 
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-3 border rounded-lg"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-foreground/80">Password</span>
+                <input
+                  type="password"
+                  placeholder="Password"
+                  className="w-full rounded-lg border border-outline-variant/40 bg-surface-lowest px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </label>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-lg bg-primary px-4 py-3 font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </button>
+            </form>
 
-        {message && <p className="text-center text-sm text-red-600 mt-4">{message}</p>}
+            {message && <p className="mt-4 text-center text-sm text-red-600">{message}</p>}
 
-        <p className="text-center text-sm mt-4">
-          Don’t have an account?{" "}
-          <Link href="/register" className="text-blue-600 font-medium">
-            Register
-          </Link>
-        </p>
-      </div>
-    </main>
+            <p className="mt-5 text-center text-sm text-foreground/70">
+              Don’t have an account?{" "}
+              <Link
+                href="/register"
+                className="font-semibold text-primary transition hover:text-primary-container"
+              >
+                Register
+              </Link>
+            </p>
+          </div>
+
+          {/* Image column (desktop only) */}
+          <div className="hidden lg:flex">
+            <div className="w-full rounded-xl bg-primary/5 p-6 shadow-lg">
+              <div className="relative aspect-square overflow-hidden rounded-lg bg-surface-lowest">
+                <img
+                  src="/clinic-office.png"
+                  alt="Healthcare illustration"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div className="mt-4 text-left">
+                <p className="text-sm font-bold text-foreground/80">Trusted, digital-first care</p>
+                <p className="mt-1 text-sm text-foreground/60">
+                  Secure login and appointment access in seconds.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
 

@@ -65,70 +65,99 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      <main className="flex-grow flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-8">
-          <h1 className="text-3xl font-bold text-center mb-2">Create an Account</h1>
-          <p className="text-gray-600 text-center mb-6">Join CareHub to manage your healthcare services</p>
+    <div className="flex min-h-screen flex-col bg-surface">
+      <main className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="grid w-full max-w-5xl grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-10">
+          {/* Form column */}
+          <div className="mx-auto w-full max-w-md rounded-xl bg-surface-lowest p-8 shadow-lg lg:mx-0">
+            <div className="mb-6 text-center">
+              <span className="mb-3 inline-flex rounded-full bg-primary/5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+                CareHub
+              </span>
+              <h1 className="mb-2 text-3xl font-extrabold font-manrope text-foreground">Create an Account</h1>
+              <p className="text-sm text-foreground/60">
+                Join CareHub to manage your healthcare services
+              </p>
+            </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              className="w-full p-3 border rounded-lg"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input
+                type="text"
+                name="name"
+                placeholder="Full Name"
+                className="w-full rounded-lg border border-outline-variant/40 bg-surface-lowest px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
 
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              className="w-full p-3 border rounded-lg"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                className="w-full rounded-lg border border-outline-variant/40 bg-surface-lowest px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
 
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              className="w-full p-3 border rounded-lg"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                className="w-full rounded-lg border border-outline-variant/40 bg-surface-lowest px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
 
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              className="w-full p-3 border rounded-lg"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                className="w-full rounded-lg border border-outline-variant/40 bg-surface-lowest px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+              />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? "Creating account..." : "Register"}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-lg bg-primary px-4 py-3 font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Creating account..." : "Register"}
+              </button>
+            </form>
 
-          {message && <p className="text-center text-sm text-red-600 mt-4">{message}</p>}
+            {message && <p className="mt-4 text-center text-sm text-red-600">{message}</p>}
 
-          <p className="text-center text-sm mt-4">
-            Already have an account?{" "}
-            <Link href="/login" className="text-blue-600 font-medium">
-              Sign In
-            </Link>
-          </p>
+            <p className="mt-5 text-center text-sm text-foreground/70">
+              Already have an account?{" "}
+              <Link href="/login" className="font-semibold text-primary transition hover:text-primary-container">
+                Sign In
+              </Link>
+            </p>
+          </div>
+
+          {/* Image column (desktop only) */}
+          <div className="hidden lg:flex">
+            <div className="w-full rounded-xl bg-primary/5 p-6 shadow-lg">
+              <div className="relative aspect-square overflow-hidden rounded-lg bg-surface-lowest">
+                <img
+                  src="/auth-illustration.svg"
+                  alt="Healthcare illustration"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div className="mt-4 text-left">
+                <p className="text-sm font-bold text-foreground/80">Fast setup, better care</p>
+                <p className="mt-1 text-sm text-foreground/60">
+                  Create your account and start booking instantly.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
