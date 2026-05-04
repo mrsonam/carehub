@@ -21,6 +21,7 @@ function patientScope(user) {
 export default async function PatientAppointmentsPage({ searchParams }) {
   const sp = await Promise.resolve(searchParams);
   const focus = sp?.focus;
+  const bookWithDoctorId = typeof sp?.doctor === "string" ? sp.doctor : undefined;
 
   const cookieStore = await cookies();
   const token = cookieStore.get(getSessionCookieName())?.value;
@@ -73,7 +74,7 @@ export default async function PatientAppointmentsPage({ searchParams }) {
         </p>
       </div>
 
-      <AppointmentBookingForm doctors={doctors} />
+      <AppointmentBookingForm doctors={doctors} initialDoctorId={bookWithDoctorId} />
 
       <PatientAppointmentsWorkspace
         focus={focus}

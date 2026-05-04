@@ -8,7 +8,7 @@ import AppointmentsWorkspace from "../../components/admin/AppointmentsWorkspace"
 export const dynamic = "force-dynamic";
 
 export default async function AdminAppointmentsPage() {
-  await requireAdminUser();
+  await requireAdminUser("/admin/appointments");
   await autoCloseExpiredAppointments(prisma);
 
   const [appointments, doctors, patients] = await Promise.all([

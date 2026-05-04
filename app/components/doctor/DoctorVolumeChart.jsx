@@ -3,17 +3,17 @@
 import { motion } from "framer-motion";
 
 /**
- * Simple vertical bar chart — appointment counts per week.
+ * Simple vertical bar chart — appointment counts per week or month.
  * `highlight` draws the current period in solid primary.
  */
-export function DoctorVolumeChart({ weeks }) {
+export function DoctorVolumeChart({ weeks, ariaLabel = "Appointment volume by period" }) {
   const max = Math.max(1, ...weeks.map((w) => w.count));
 
   return (
     <div
       className="flex justify-between gap-2 sm:gap-3"
       role="img"
-      aria-label="Weekly appointment volume"
+      aria-label={ariaLabel}
     >
       {weeks.map((w, i) => {
         const pct = (w.count / max) * 100;

@@ -47,7 +47,17 @@ function monthTitle(date) {
   return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
-export function AppointmentBookingForm({ doctors = [], patients = [], mode = "patient" }) {
+function resolveInitialDoctorId(doctors, initialDoctorId) {
+  if (initialDoctorId && doctors.some((d) => d.id === initialDoctorId)) return initialDoctorId;
+  return doctors[0]?.id ?? "";
+}
+
+export function AppointmentBookingForm({
+  doctors = [],
+  patients = [],
+  mode = "patient",
+  initialDoctorId,
+}) {
   const router = useRouter();
   const toast = useToast();
   const usesSlotPicker = mode === "patient" || mode === "admin";
@@ -58,7 +68,7 @@ export function AppointmentBookingForm({ doctors = [], patients = [], mode = "pa
   });
   const bookingDates = useMemo(() => monthGrid(monthDate), [monthDate]);
   const todayKey = dateValue(0);
-  const [doctorId, setDoctorId] = useState(doctors[0]?.id ?? "");
+  const [doctorId, setDoctorId] = useState(() => resolveInitialDoctorId(doctors, initialDoctorId));
   const [patientId, setPatientId] = useState(patients[0]?.id ?? "");
   const [patientName, setPatientName] = useState("");
   const [date, setDate] = useState(dateValue());
