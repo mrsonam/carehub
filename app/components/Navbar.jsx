@@ -5,6 +5,7 @@ import { Activity, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { dashboardHomeForRole } from "@/lib/dashboard-routes";
 
 const NAV_LINKS = [
   { name: "Services", href: "/services" },
@@ -74,6 +75,8 @@ export default function Navbar() {
     };
   }, [mobileOpen, closeMobile]);
 
+  const dashboardHref = user ? dashboardHomeForRole(user.role) : "/dashboard";
+
   const handleSignOut = async () => {
     closeMobile();
     try {
@@ -125,7 +128,7 @@ export default function Navbar() {
           {!loading && user ? (
             <>
               <Link
-                href="/dashboard"
+                href={dashboardHref}
                 className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
               >
                 Dashboard
@@ -213,7 +216,7 @@ export default function Navbar() {
               {!loading && user ? (
                 <>
                   <Link
-                    href="/dashboard"
+                    href={dashboardHref}
                     onClick={closeMobile}
                     className="flex items-center justify-center w-full py-3 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm hover:bg-primary-container transition-colors"
                   >

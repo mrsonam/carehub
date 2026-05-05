@@ -117,10 +117,10 @@ export default async function PatientDashboard() {
   const first = user.name.split(/\s+/)[0] ?? user.name;
 
   const specialties = [
-    { name: "Neurology", href: "/doctors", icon: Brain, blurb: `${Math.max(1, Math.floor(data.totalDoctors / 4))}+ in network` },
-    { name: "Pediatrics", href: "/doctors", icon: Baby, blurb: `${Math.max(1, Math.floor(data.totalDoctors / 3))}+ in network` },
-    { name: "Dermatology", href: "/doctors", icon: Sparkles, blurb: "Referrals available" },
-    { name: "Mental health", href: "/doctors", icon: Heart, blurb: "Care navigation" },
+    { name: "Neurology", href: "/patient/doctors", icon: Brain, blurb: `${Math.max(1, Math.floor(data.totalDoctors / 4))}+ in network` },
+    { name: "Pediatrics", href: "/patient/doctors", icon: Baby, blurb: `${Math.max(1, Math.floor(data.totalDoctors / 3))}+ in network` },
+    { name: "Dermatology", href: "/patient/doctors", icon: Sparkles, blurb: "Referrals available" },
+    { name: "Mental health", href: "/patient/doctors", icon: Heart, blurb: "Care navigation" },
   ];
 
   return (
@@ -262,7 +262,7 @@ export default async function PatientDashboard() {
       </section>
 
       <section>
-        <PanelHead eyebrow="Care network" title="Find a specialist" action={{ href: "/doctors", label: "Browse all" }} />
+        <PanelHead eyebrow="Care network" title="Find a specialist" action={{ href: "/patient/doctors", label: "Browse all" }} />
         <p className="text-xs text-foreground/50 mt-1">
           Filter in the full directory. Counts are illustrative for this demo.
         </p>
@@ -293,7 +293,7 @@ export default async function PatientDashboard() {
       </section>
 
       <section className="panel p-6">
-        <PanelHead eyebrow="Today" title="Available in our network" action={{ href: "/doctors", label: "See schedule" }} />
+        <PanelHead eyebrow="Today" title="Available in our network" action={{ href: "/patient/doctors", label: "See directory" }} />
         {data.doctors.length === 0 ? (
           <p className="mt-4 text-sm text-foreground/50">No clinicians are listed yet.</p>
         ) : (

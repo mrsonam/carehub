@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Bell, Menu, Search, X } from "lucide-react";
+import { Activity, Bell, LayoutDashboard, Menu, Search, X } from "lucide-react";
+import { dashboardHomeForRole } from "@/lib/dashboard-routes";
 import { DashboardSidebarContents } from "./DashboardSidebarContents";
 import { motion } from "framer-motion";
 
@@ -57,6 +58,7 @@ export function DashboardChrome({ user, children }) {
   }, [mobileOpen, close]);
 
   const searchPh = SEARCH_PLACEHOLDER[user.role] ?? SEARCH_PLACEHOLDER.ADMIN;
+  const dashboardHome = dashboardHomeForRole(user.role);
 
   if (isSetup) {
     return (
@@ -110,6 +112,14 @@ export function DashboardChrome({ user, children }) {
               >
                 <Menu size={20} />
               </button>
+              <Link
+                href={dashboardHome}
+                className="lg:hidden inline-flex items-center gap-1.5 shrink-0 rounded-lg border border-primary/[0.12] bg-surface-lowest px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 hover:border-primary/25 transition-colors"
+                title="Go to dashboard"
+              >
+                <LayoutDashboard size={14} aria-hidden />
+                Dashboard
+              </Link>
               <div className="flex-1 max-w-md relative min-w-0">
                 <Search
                   size={15}
@@ -132,7 +142,11 @@ export function DashboardChrome({ user, children }) {
                 <Bell size={16} />
               </button>
 
-              <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2">
+              <Link
+                href={dashboardHome}
+                className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 rounded-lg hover:bg-surface-high/80 transition-colors pr-1 -mr-1"
+                title="Dashboard home"
+              >
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-semibold leading-tight">{user.name}</p>
                   <p className="text-[11px] text-foreground/50 leading-tight">
@@ -144,7 +158,7 @@ export function DashboardChrome({ user, children }) {
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold font-manrope">
                   {initialsOf(user.name)}
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </header>

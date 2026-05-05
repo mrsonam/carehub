@@ -6,7 +6,7 @@ import TeamDirectory from "../../components/admin/TeamDirectory";
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
-  await requireAdminUser();
+  await requireAdminUser("/admin/users");
 
   const staff = await prisma.user.findMany({
     where: { role: { in: ["ADMIN", "DOCTOR"] } },

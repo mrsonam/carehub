@@ -6,8 +6,8 @@ import { AppointmentDetailsPanel } from "../../../components/appointments/Appoin
 export const dynamic = "force-dynamic";
 
 export default async function AdminAppointmentDetailsPage({ params }) {
-  await requireAdminUser();
   const { id } = await params;
+  await requireAdminUser(`/admin/appointments/${id}`);
 
   const appointment = await prisma.appointment.findUnique({ where: { id } });
   if (!appointment) notFound();
