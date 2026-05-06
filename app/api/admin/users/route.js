@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { getAdminOrErrorResponse } from "@/lib/auth-server";
+import { getAppBaseUrl } from "@/lib/app-url";
+import { sendStaffWelcomeEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,5 +58,18 @@ export async function POST(req) {
     select: { id: true, name: true, email: true, role: true, createdAt: true },
   });
 
-  return Response.json({ ok: true, user });
+  const welcome = await sendStaffWelcomeEmail({
+    to: user.email,
+    name: user.name,
+    role: user.role,
+    temporaryPassword: password,
+    loginUrl: `${getAppBaseUrl()}/login`,
+  });
+
+  return Response.json({
+    ok: true,
+    user,
+    emailSent: welcome.ok,
+    ...(welcome.ok ? {} : { emailWarning: welcome.error }),
+  });
 }
