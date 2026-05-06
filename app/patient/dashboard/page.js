@@ -125,36 +125,6 @@ export default async function PatientDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
-            Home
-          </p>
-          <h1 className="mt-2 text-3xl lg:text-4xl font-extrabold font-manrope tracking-tight">
-            Welcome back, {first}.
-          </h1>
-          <p className="text-foreground/55 mt-1.5 text-sm">
-            {data.weekCount === 0
-              ? "No consultations scheduled in the next 7 days."
-              : `${data.weekCount} upcoming consultation${data.weekCount === 1 ? "" : "s"} this week.`}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/patient/appointments"
-            className="inline-flex items-center h-10 px-4 rounded-lg text-sm font-medium text-foreground/80 bg-surface-lowest border border-primary/[0.08] shadow-[0_1px_2px_rgba(16,24,40,0.04)] hover:border-primary/20 transition-colors"
-          >
-            View all records
-          </Link>
-          <Link
-            href="/patient/appointments"
-            className="inline-flex items-center h-10 px-4 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm shadow-primary/20 hover:bg-primary-container transition-colors"
-          >
-            Book appointment
-          </Link>
-        </div>
-      </header>
-
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="panel p-6 lg:col-span-2 flex flex-col sm:flex-row gap-6">
           {data.nextAppt ? (

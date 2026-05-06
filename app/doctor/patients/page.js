@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { CalendarClock, ClipboardList, Sparkles, UserRound, Users } from "lucide-react";
+import { CalendarClock, ClipboardList, UserRound, Users } from "lucide-react";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
@@ -193,53 +192,6 @@ export default async function DoctorPatientsPage() {
 
   return (
     <div className="max-w-5xl mx-auto w-full flex flex-col gap-8">
-      <header className="relative overflow-hidden rounded-2xl border border-primary/[0.08] bg-gradient-to-br from-primary/[0.07] via-surface-lowest to-surface-lowest p-6 sm:p-8">
-        <div className="pointer-events-none absolute -right-16 -top-12 h-48 w-48 rounded-full bg-primary/[0.12] blur-3xl" aria-hidden />
-        <div
-          className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full blur-3xl"
-          style={{ background: "color-mix(in srgb, var(--secondary) 14%, transparent)" }}
-          aria-hidden
-        />
-        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div>
-            <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-primary/80">
-              <Sparkles size={14} className="opacity-80" aria-hidden />
-              Caseload
-            </p>
-            <h1 className="mt-3 text-2xl lg:text-3xl font-extrabold font-manrope tracking-tight">
-              Your patients
-            </h1>
-            <p className="text-sm text-foreground/60 mt-2 max-w-xl leading-relaxed">
-              Everyone you have seen or who has an appointment with you. Charts below summarize volume and
-              status; search and filters help you jump to a person quickly.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Link
-                href="/doctor/dashboard"
-                className="inline-flex items-center justify-center h-9 px-4 rounded-lg bg-surface-lowest/90 border border-primary/[0.1] text-xs font-semibold text-foreground/75 hover:border-primary/25 hover:bg-surface-lowest transition-colors"
-              >
-                Overview
-              </Link>
-              <Link
-                href="/doctor/availability"
-                className="inline-flex items-center justify-center h-9 px-4 rounded-lg bg-surface-lowest/90 border border-primary/[0.1] text-xs font-semibold text-foreground/75 hover:border-primary/25 hover:bg-surface-lowest transition-colors"
-              >
-                Availability
-              </Link>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-            <Link
-              href="/doctor/schedule"
-              className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-primary text-white text-sm font-semibold shadow-lg shadow-primary/20 hover:bg-primary-container transition-colors"
-            >
-              <CalendarClock size={18} />
-              Open schedule
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric
           icon={Users}

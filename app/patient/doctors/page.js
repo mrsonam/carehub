@@ -4,8 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   CalendarClock,
-  CalendarPlus,
-  Sparkles,
   Stethoscope,
   Users,
   Video,
@@ -142,44 +140,6 @@ export default async function PatientDoctorsPage() {
 
   return (
     <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-      <header className="relative overflow-hidden rounded-2xl border border-primary/[0.08] bg-gradient-to-br from-primary/[0.06] via-surface-lowest to-surface-lowest p-6 sm:p-8">
-        <div
-          className="pointer-events-none absolute -right-8 -top-6 h-36 w-36 rounded-full bg-primary/[0.1] blur-3xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div>
-            <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
-              <Sparkles size={14} className="text-primary/80" aria-hidden />
-              Care network
-            </p>
-            <h1 className="mt-2 text-3xl lg:text-4xl font-extrabold font-manrope tracking-tight">
-              Your doctors, {firstName}
-            </h1>
-            <p className="text-foreground/55 mt-2 text-sm max-w-2xl leading-relaxed">
-              Everyone on staff you can book with. Filters show who you have already seen, who has online
-              scheduling, and who has a future visit with you. Booking opens the appointment form with that
-              clinician pre-selected.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <Link
-              href="/patient/appointments"
-              className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-white text-sm font-semibold shadow-lg shadow-primary/20 hover:bg-primary-container transition-colors"
-            >
-              <CalendarPlus size={18} />
-              Book appointment
-            </Link>
-            <Link
-              href="/doctors"
-              className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-primary/[0.15] text-primary text-sm font-semibold hover:bg-primary/10 transition-colors"
-            >
-              Clinic stories
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric
           icon={Stethoscope}

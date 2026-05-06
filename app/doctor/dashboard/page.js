@@ -1,12 +1,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import {
   UserRound,
   CalendarDays,
   CalendarClock,
   ClipboardList,
-  Play,
   CalendarCheck2,
   AlertTriangle,
 } from "lucide-react";
@@ -215,29 +213,6 @@ export default async function DoctorDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
-            Overview
-          </p>
-          <h1 className="mt-2 text-3xl lg:text-4xl font-extrabold font-manrope tracking-tight">
-            {greet}, {user.name.split(/\s+/)[0]}.
-          </h1>
-          <p className="text-foreground/55 mt-1.5 text-sm">
-            {data.todayCount} visit{data.todayCount === 1 ? "" : "s"} scheduled today
-            {data.pendingToday ? ` · ${data.pendingToday} still ahead` : ""}
-            {data.upcomingWithNotes ? ` · ${data.upcomingWithNotes} with chart notes before you see them` : ""}.
-          </p>
-        </div>
-        <Link
-          href={data.nextHref}
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm shadow-primary/20 hover:bg-primary-container transition-colors"
-        >
-          <Play size={16} />
-          Start next consultation
-        </Link>
-      </header>
-
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric icon={UserRound} label="My patients" value={data.myPatients} hint={data.totalAppts ? `${data.totalAppts} total visit${data.totalAppts === 1 ? "" : "s"}` : "No visits on file yet"} />
         <Metric icon={CalendarDays} label="Today’s schedule" value={data.todayCount} hint={data.pendingToday ? `${data.pendingToday} remaining today` : "Nothing else today"} />

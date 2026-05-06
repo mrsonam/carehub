@@ -1,12 +1,5 @@
 import Link from "next/link";
-import {
-  CalendarClock,
-  CalendarPlus,
-  Sparkles,
-  UserPlus,
-  UserRound,
-  Users,
-} from "lucide-react";
+import { CalendarClock, UserPlus, UserRound, Users } from "lucide-react";
 import { requireAdminUser } from "@/lib/auth-server";
 import { prisma } from "@/lib/prisma";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
@@ -116,43 +109,6 @@ export default async function AdminPatientsPage() {
 
   return (
     <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-      <header className="relative overflow-hidden rounded-2xl border border-primary/[0.08] bg-gradient-to-br from-primary/[0.06] via-surface-lowest to-surface-lowest p-6 sm:p-8">
-        <div
-          className="pointer-events-none absolute -right-12 -top-10 h-44 w-44 rounded-full bg-primary/[0.1] blur-3xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div>
-            <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
-              <Sparkles size={14} className="text-primary/80" aria-hidden />
-              Population
-            </p>
-            <h1 className="mt-2 text-3xl lg:text-4xl font-extrabold font-manrope tracking-tight">
-              Patients
-            </h1>
-            <p className="text-foreground/55 mt-1.5 text-sm max-w-2xl leading-relaxed">
-              Registered portal accounts and how often they book. Guest-only names from walk-ins appear
-              in the secondary list — link them when you create a full patient user.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <Link
-              href="/admin/appointments"
-              className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-white text-sm font-semibold shadow-lg shadow-primary/20 hover:bg-primary-container transition-colors"
-            >
-              <CalendarPlus size={18} />
-              Appointments
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-primary/[0.15] text-primary text-sm font-semibold hover:bg-primary/10 transition-colors"
-            >
-              Overview
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric
           icon={Users}

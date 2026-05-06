@@ -1,12 +1,8 @@
-import Link from "next/link";
 import {
   CalendarClock,
-  CalendarPlus,
   Clock,
   KeyRound,
-  Sparkles,
   Stethoscope,
-  UserPlus,
   Users,
 } from "lucide-react";
 import { requireAdminUser } from "@/lib/auth-server";
@@ -155,50 +151,6 @@ export default async function AdminDoctorsPage() {
 
   return (
     <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-      <header className="relative overflow-hidden rounded-2xl border border-primary/[0.08] bg-gradient-to-br from-primary/[0.06] via-surface-lowest to-surface-lowest p-6 sm:p-8">
-        <div
-          className="pointer-events-none absolute -right-10 -top-8 h-40 w-40 rounded-full bg-primary/[0.11] blur-3xl"
-          aria-hidden
-        />
-        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div>
-            <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
-              <Sparkles size={14} className="text-primary/80" aria-hidden />
-              Clinical staff
-            </p>
-            <h1 className="mt-2 text-3xl lg:text-4xl font-extrabold font-manrope tracking-tight">
-              Doctors
-            </h1>
-            <p className="text-foreground/55 mt-1.5 text-sm max-w-2xl leading-relaxed">
-              Clinicians with sign-in access, their booking volume, and availability setup. Invite or edit
-              accounts under Team; schedule visits from Appointments.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <Link
-              href="/admin/users"
-              className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-white text-sm font-semibold shadow-lg shadow-primary/20 hover:bg-primary-container transition-colors"
-            >
-              <UserPlus size={18} />
-              Team & invites
-            </Link>
-            <Link
-              href="/admin/appointments"
-              className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-primary/[0.15] text-primary text-sm font-semibold hover:bg-primary/10 transition-colors"
-            >
-              <CalendarPlus size={18} />
-              Appointments
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-primary/[0.12] text-foreground/75 text-sm font-semibold hover:bg-surface-low transition-colors"
-            >
-              Overview
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric
           icon={Stethoscope}
