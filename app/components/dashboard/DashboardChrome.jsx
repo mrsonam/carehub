@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Bell, LayoutDashboard, Menu, Search, X } from "lucide-react";
+import { Activity, LayoutDashboard, Menu, Search, X } from "lucide-react";
 import { dashboardHomeForRole } from "@/lib/dashboard-routes";
 import { DashboardSidebarContents } from "./DashboardSidebarContents";
 import { motion } from "framer-motion";
+import NotificationBell from "./NotificationBell";
 
 const ROLE_LABEL = {
   ADMIN: "Administrator",
@@ -134,13 +135,7 @@ export function DashboardChrome({ user, children }) {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-              <button
-                type="button"
-                aria-label="Notifications"
-                className="w-9 h-9 rounded-md flex items-center justify-center text-foreground/55 hover:text-foreground hover:bg-surface-high transition-colors"
-              >
-                <Bell size={16} />
-              </button>
+              <NotificationBell />
 
               <Link
                 href={dashboardHome}

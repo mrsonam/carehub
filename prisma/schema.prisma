@@ -24,6 +24,14 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum NotificationType {
+  APPOINTMENT_REQUESTED
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_REMINDER_24H
+  APPOINTMENT_REMINDER_1H
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -46,9 +54,31 @@ model User {
   doctorAppointments  Appointment[] @relation("DoctorAppointments")
   availabilityRules    DoctorAvailabilityRule[]
   availabilityOverrides DoctorAvailabilityOverride[]
+  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type NotificationType
+  title String
+  message String
+
+  appointmentId String?
+  dedupeKey String? @unique
+
+  readAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt, createdAt])
+  @@index([appointmentId])
+  @@index([type])
 }
 
 model Appointment {
