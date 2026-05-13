@@ -15,6 +15,17 @@ test("classifyIntent detects doctor info questions", () => {
   assert.equal(intent, "doctor_info");
 });
 
+test("classifyIntent detects doctor intent when user writes a roster name from hints", () => {
+  assert.equal(
+    classifyIntent("Tell me about Sarah Mitchell", ["sarah mitchell", "dr sarah mitchell"]),
+    "doctor_info",
+  );
+});
+
+test("classifyIntent treats contact / phone questions as in scope", () => {
+  assert.equal(classifyIntent("What is your phone number?"), "clinic_general");
+});
+
 test("classifyIntent detects website navigation questions", () => {
   const intent = classifyIntent("How do I book an appointment on this website?");
   assert.equal(intent, "website_navigation");
@@ -45,6 +56,15 @@ test("createOutOfScopeReply keeps response constrained to clinic topics", () => 
 test("createSafetyReply includes emergency guidance", () => {
   const reply = createSafetyReply();
   assert.match(reply, /emergency|000|911/i);
+});
+
+test("enforceResponsePolicy allows in-scope user when the model reply omits clinic keywords", () => {
+  const result = enforceResponsePolicy({
+    userMessage: "What is your phone number?",
+    modelText: "You can call us at (02) 5555 1234.",
+  });
+  assert.equal(result.blocked, false);
+  assert.equal(result.safeText, "You can call us at (02) 5555 1234.");
 });
 
 test("enforceResponsePolicy blocks non-clinic answers", () => {
