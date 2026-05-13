@@ -4,6 +4,7 @@ import {
   resolveAutoCloseStatus,
 } from "@/lib/appointment-lifecycle";
 import { prisma } from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -132,10 +133,67 @@ export async function PATCH(request, { params }) {
     return Response.json({ ok: false, error: "Nothing to update." }, { status: 400 });
   }
 
+  const prevStatus = appointment.status;
   const updated = await prisma.appointment.update({
     where: { id },
     data: update,
   });
+
+  if (typeof update.status === "string" && update.status !== prevStatus) {
+    const whenLabel = updated.scheduledAt.toLocaleString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    if (update.status === "CONFIRMED") {
+      if (updated.patientId) {
+        await createNotification({
+          userId: updated.patientId,
+          type: "APPOINTMENT_CONFIRMED",
+          title: "Appointment confirmed",
+          message: `Your appointment is confirmed for ${whenLabel}.`,
+          appointmentId: updated.id,
+          dedupeKey: `appt_confirmed:${updated.id}`,
+        }).catch(() => null);
+      }
+      if (updated.doctorId) {
+        await createNotification({
+          userId: updated.doctorId,
+          type: "APPOINTMENT_CONFIRMED",
+          title: "Appointment confirmed",
+          message: `An appointment was confirmed for ${whenLabel}.`,
+          appointmentId: updated.id,
+          dedupeKey: `appt_confirmed_doctor:${updated.id}`,
+        }).catch(() => null);
+      }
+    }
+
+    if (update.status === "CANCELLED") {
+      if (updated.patientId) {
+        await createNotification({
+          userId: updated.patientId,
+          type: "APPOINTMENT_CANCELLED",
+          title: "Appointment cancelled",
+          message: `Your appointment scheduled for ${whenLabel} was cancelled.`,
+          appointmentId: updated.id,
+          dedupeKey: `appt_cancelled:${updated.id}`,
+        }).catch(() => null);
+      }
+      if (updated.doctorId) {
+        await createNotification({
+          userId: updated.doctorId,
+          type: "APPOINTMENT_CANCELLED",
+          title: "Appointment cancelled",
+          message: `An appointment scheduled for ${whenLabel} was cancelled.`,
+          appointmentId: updated.id,
+          dedupeKey: `appt_cancelled_doctor:${updated.id}`,
+        }).catch(() => null);
+      }
+    }
+  }
 
   return Response.json({ ok: true, appointment: updated });
 }

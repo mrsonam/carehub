@@ -1,5 +1,6 @@
 import { getSessionUserOrErrorResponse } from "@/lib/auth-server";
 import { prisma } from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -132,6 +133,17 @@ export async function POST(request) {
       status,
     },
   });
+
+  if (appointment.doctorId) {
+    await createNotification({
+      userId: appointment.doctorId,
+      type: "APPOINTMENT_REQUESTED",
+      title: "New appointment request",
+      message: `${appointment.patientName} requested an appointment.`,
+      appointmentId: appointment.id,
+      dedupeKey: `appt_requested:${appointment.id}`,
+    }).catch(() => null);
+  }
 
   return Response.json({ ok: true, appointment }, { status: 201 });
 }

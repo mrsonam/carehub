@@ -133,7 +133,7 @@ export default async function AdminDashboard() {
             the books · {stats.upcomingCount} upcoming · last 30 days
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             className="inline-flex items-center gap-2 h-10 px-4 rounded-lg text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-surface-lowest transition-colors"
