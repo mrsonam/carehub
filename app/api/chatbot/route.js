@@ -6,6 +6,8 @@ import { checkChatRateLimit } from "../../../lib/chatbot/rate-limit.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+/** Allow time for DB + doctor hints + NVIDIA; increase on Vercel if you raise the platform function limit. */
+export const maxDuration = 60;
 
 const MAX_MESSAGE = 800;
 const MAX_TURNS = 20;

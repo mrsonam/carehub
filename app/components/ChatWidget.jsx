@@ -13,6 +13,9 @@ const QUICK_ACTIONS = [
   "Opening hours",
 ];
 
+/** Slightly above server LLM timeout + DB work so the UI stops waiting if the request never completes. */
+const CHAT_FETCH_TIMEOUT_MS = 14_000;
+
 function shouldHideWidget(pathname) {
   return pathname != null && /^(\/dashboard|\/admin|\/doctor|\/patient)(\/|$)/.test(pathname);
 }
@@ -60,14 +63,41 @@ export default function ChatWidget() {
     setInput("");
     setLoading(true);
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), CHAT_FETCH_TIMEOUT_MS);
+
     try {
       const response = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text, history: nextMessages.slice(-20) }),
+        signal: controller.signal,
       });
+
       const payload = await response.json().catch(() => null);
-      const assistantText = payload?.reply || payload?.error || "Sorry, I could not respond right now.";
+
+      if (!response.ok) {
+        const errMsg =
+          payload?.error ||
+          (response.status === 429
+            ? "Too many requests. Please wait a moment and try again."
+            : "Sorry, our assistant is unavailable right now. Please try again or contact us from the Contact page.");
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            text: errMsg,
+            doctorCards: null,
+            navLinks: null,
+          },
+        ]);
+        return;
+      }
+
+      const assistantText =
+        payload?.reply ||
+        payload?.error ||
+        "Sorry, I could not respond right now. Please try again or use our Contact page.";
       setMessages((prev) => [
         ...prev,
         {
@@ -77,17 +107,21 @@ export default function ChatWidget() {
           navLinks: payload?.navLinks ?? null,
         },
       ]);
-    } catch {
+    } catch (err) {
+      const aborted = err?.name === "AbortError";
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: "I am having trouble connecting right now. Please try again shortly.",
+          text: aborted
+            ? "That request took too long. Please try again in a moment, or reach us via the Contact page or phone number on the site."
+            : "I am having trouble connecting right now. Please try again shortly or contact the clinic directly.",
           doctorCards: null,
           navLinks: null,
         },
       ]);
     } finally {
+      window.clearTimeout(timeoutId);
       setLoading(false);
     }
   }
