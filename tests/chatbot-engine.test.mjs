@@ -39,9 +39,10 @@ test("buildChatbotReply returns grounded doctor information", async () => {
 
   assert.equal(result.intent, "doctor_info");
   assert.equal(result.ok, true);
-  assert.match(result.reply, /Dr Sarah Mitchell/);
-  assert.match(result.reply, /Availability:/);
-  assert.match(result.reply, /Booking:/);
+  assert.match(result.reply, /card below/i);
+  assert.ok(!result.reply.includes("Availability:"));
+  assert.equal(result.doctorCards[0].name, "Dr Sarah Mitchell");
+  assert.match(result.doctorCards[0].bio, /Family medicine/);
   assert.equal(Array.isArray(result.doctorCards), true);
   assert.equal(result.doctorCards.length, 1);
 });
@@ -112,6 +113,10 @@ test("buildChatbotReply matches a doctor by full name without the word doctor", 
 
   assert.equal(result.intent, "doctor_info");
   assert.match(result.reply, /Sarah Mitchell/);
+  assert.match(result.reply, /card/i);
   assert.ok(!result.reply.includes("James Lee"));
+  assert.ok(!result.reply.includes("Heart health"));
   assert.equal(result.doctorCards.length, 1);
+  assert.equal(result.doctorCards[0].name, "Dr Sarah Mitchell");
+  assert.match(result.doctorCards[0].bio, /Family medicine/);
 });

@@ -13,8 +13,10 @@ const QUICK_ACTIONS = [
   "Opening hours",
 ];
 
-/** Slightly above server LLM timeout + DB work so the UI stops waiting if the request never completes. */
-const CHAT_FETCH_TIMEOUT_MS = 14_000;
+const IS_DEV = process.env.NODE_ENV === "development";
+
+/** Production only: abort if the API hangs (slightly above server LLM default 15s). Dev: no client abort. */
+const CHAT_FETCH_TIMEOUT_MS = IS_DEV ? null : 22_000;
 
 function shouldHideWidget(pathname) {
   return pathname != null && /^(\/dashboard|\/admin|\/doctor|\/patient)(\/|$)/.test(pathname);
@@ -63,16 +65,24 @@ export default function ChatWidget() {
     setInput("");
     setLoading(true);
 
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), CHAT_FETCH_TIMEOUT_MS);
+    let timeoutId = null;
+    const abortController =
+      !IS_DEV && typeof CHAT_FETCH_TIMEOUT_MS === "number" && CHAT_FETCH_TIMEOUT_MS > 0
+        ? new AbortController()
+        : null;
+    if (abortController) {
+      timeoutId = window.setTimeout(() => abortController.abort(), CHAT_FETCH_TIMEOUT_MS);
+    }
 
     try {
-      const response = await fetch("/api/chatbot", {
+      const fetchOpts = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text, history: nextMessages.slice(-20) }),
-        signal: controller.signal,
-      });
+      };
+      if (abortController) fetchOpts.signal = abortController.signal;
+
+      const response = await fetch("/api/chatbot", fetchOpts);
 
       const payload = await response.json().catch(() => null);
 
@@ -121,7 +131,7 @@ export default function ChatWidget() {
         },
       ]);
     } finally {
-      window.clearTimeout(timeoutId);
+      if (timeoutId != null) window.clearTimeout(timeoutId);
       setLoading(false);
     }
   }
