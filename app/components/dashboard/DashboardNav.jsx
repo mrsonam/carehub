@@ -11,6 +11,7 @@ import {
   ClipboardList,
   BarChart3,
   UserPlus,
+  CircleDollarSign,
 } from "lucide-react";
 
 const NAV_BY_ROLE = {
@@ -20,6 +21,7 @@ const NAV_BY_ROLE = {
     { name: "Appointments", href: "/admin/appointments", icon: CalendarDays },
     { name: "Patients", href: "/admin/patients", icon: Users },
     { name: "Doctors", href: "/admin/doctors", icon: Stethoscope },
+    { name: "Fees", href: "/admin/settings/fees", icon: CircleDollarSign },
     { name: "Activity", href: "/admin/activity", icon: ClipboardList },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   ],
