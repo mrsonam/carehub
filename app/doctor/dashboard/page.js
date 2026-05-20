@@ -213,7 +213,7 @@ export default async function DoctorDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric icon={UserRound} label="My patients" value={data.myPatients} hint={data.totalAppts ? `${data.totalAppts} total visit${data.totalAppts === 1 ? "" : "s"}` : "No visits on file yet"} />
         <Metric icon={CalendarDays} label="Today’s schedule" value={data.todayCount} hint={data.pendingToday ? `${data.pendingToday} remaining today` : "Nothing else today"} />
         <Metric icon={ClipboardList} label="Notes before visits" value={data.upcomingWithNotes} hint="Upcoming with a note" />

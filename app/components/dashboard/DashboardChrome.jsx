@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, LayoutDashboard, Menu, Search, X } from "lucide-react";
+import { Activity, Menu, Search, X } from "lucide-react";
 import { dashboardHomeForRole } from "@/lib/dashboard-routes";
 import { DashboardSidebarContents } from "./DashboardSidebarContents";
 import { motion } from "framer-motion";
@@ -113,15 +113,7 @@ export function DashboardChrome({ user, children }) {
               >
                 <Menu size={20} />
               </button>
-              <Link
-                href={dashboardHome}
-                className="lg:hidden inline-flex items-center gap-1.5 shrink-0 rounded-lg border border-primary/[0.12] bg-surface-lowest px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 hover:border-primary/25 transition-colors"
-                title="Go to dashboard"
-              >
-                <LayoutDashboard size={14} aria-hidden />
-                Dashboard
-              </Link>
-              <div className="flex-1 max-w-md relative min-w-0">
+              <div className="flex-1 max-w-md relative min-w-0 hidden sm:block">
                 <Search
                   size={15}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none"

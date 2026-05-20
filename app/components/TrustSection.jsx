@@ -5,12 +5,12 @@ import { Calendar, UserCheck, History, Award, CheckCircle2 } from "lucide-react"
 
 export default function TrustSection() {
   return (
-    <section id="about-us" className="py-24 bg-surface px-20 relative overflow-hidden">
+    <section id="about-us" className="py-16 sm:py-24 bg-surface px-4 sm:px-8 lg:px-20 relative overflow-hidden">
       {/* Background Accent */}
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-secondary/5 rounded-full blur-[100px] -translate-x-1/2" />
       
       <div className="container mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 lg:gap-20 items-center">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}

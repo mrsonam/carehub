@@ -8,7 +8,6 @@ import {
   Clock,
   Users,
   Stethoscope,
-  ClipboardList,
   BarChart3,
   UserPlus,
   CircleDollarSign,
@@ -22,7 +21,6 @@ const NAV_BY_ROLE = {
     { name: "Patients", href: "/admin/patients", icon: Users },
     { name: "Doctors", href: "/admin/doctors", icon: Stethoscope },
     { name: "Fees", href: "/admin/settings/fees", icon: CircleDollarSign },
-    { name: "Activity", href: "/admin/activity", icon: ClipboardList },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   ],
   DOCTOR: [

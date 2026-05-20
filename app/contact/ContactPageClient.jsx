@@ -6,7 +6,7 @@ import ContactInquiryForm from "./ContactInquiryForm";
 
 export default function ContactPageClient({ companyEmail }) {
   return (
-    <div className="bg-surface pt-20 pb-40 px-20">
+    <div className="bg-surface pt-20 pb-24 sm:pb-40 px-4 sm:px-8 lg:px-20">
       <div className="container mx-auto">
         <div className="text-center max-w-4xl mx-auto mb-24">
           <motion.div
@@ -34,7 +34,7 @@ export default function ContactPageClient({ companyEmail }) {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start mb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 lg:gap-20 items-start mb-32">
           <div className="space-y-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[

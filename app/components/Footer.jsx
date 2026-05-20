@@ -15,7 +15,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-surface-low pt-24 pb-12 px-20 border-t border-outline-variant/10">
+    <footer className="bg-surface-low pt-16 sm:pt-24 pb-12 px-4 sm:px-8 lg:px-20 border-t border-outline-variant/10">
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="flex flex-col gap-6">

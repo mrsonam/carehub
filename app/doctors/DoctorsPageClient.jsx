@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Users, ShieldCheck, Phone } from "lucide-react";
+import { Users, ShieldCheck, Phone, Search, X } from "lucide-react";
 
 export default function DoctorsPageClient({ doctors }) {
   const [search, setSearch] = useState("");
@@ -12,7 +12,7 @@ export default function DoctorsPageClient({ doctors }) {
   const categories = ["All", "General", "Pediatrics", "Specialized"];
 
   const filteredDoctors = doctors.filter((d) => {
-    const haystack = `${d.name} ${d.specialty} ${d.title}`.toLowerCase();
+    const haystack = `${d.name} ${d.specialty} ${d.title} ${d.bio}`.toLowerCase();
     const matchesSearch = haystack.includes(search.toLowerCase());
     const matchesCategory = activeCategory === "All" || d.category === activeCategory;
     return matchesSearch && matchesCategory;
@@ -20,7 +20,7 @@ export default function DoctorsPageClient({ doctors }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-surface">
-      <main className="flex-grow pt-20 pb-40 px-20">
+      <main className="flex-grow pt-20 pb-24 sm:pb-40 px-4 sm:px-8 lg:px-20">
         <div className="container mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <motion.div
@@ -48,30 +48,63 @@ export default function DoctorsPageClient({ doctors }) {
             </motion.p>
           </div>
 
-          <div className="max-w-4xl mx-auto mb-10 flex flex-col md:flex-row gap-4">
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by doctor name, title, or specialty"
-              className="flex-1 h-12 rounded-xl border border-outline-variant/20 px-4 bg-surface-lowest text-sm outline-none focus:ring-2 focus:ring-primary/20"
-            />
-            <div className="flex gap-2 flex-wrap">
-              {categories.map((category) => (
+          <section
+            className="max-w-4xl mx-auto mb-10 flex flex-col gap-4"
+            aria-label="Find a doctor"
+          >
+            <label className="relative block w-full">
+              <span className="sr-only">Search doctors</span>
+              <Search
+                size={18}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none"
+                aria-hidden
+              />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search by name, title, or specialty…"
+                autoComplete="off"
+                className="w-full h-11 sm:h-12 pl-11 pr-11 rounded-xl bg-surface-lowest border border-primary/[0.1] text-sm shadow-[0_1px_2px_rgba(16,24,40,0.04)] outline-none placeholder:text-foreground/40 focus:border-primary/25 focus:ring-2 focus:ring-primary/15"
+              />
+              {search ? (
                 <button
-                  key={category}
                   type="button"
-                  onClick={() => setActiveCategory(category)}
-                  className={`h-12 px-4 rounded-xl text-sm font-semibold ${
-                    activeCategory === category
-                      ? "bg-primary text-white"
-                      : "bg-surface-lowest text-foreground/70 border border-outline-variant/20"
-                  }`}
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg inline-flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-surface-low transition-colors"
+                  aria-label="Clear search"
                 >
-                  {category}
+                  <X size={16} aria-hidden />
                 </button>
-              ))}
+              ) : null}
+            </label>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-2 overflow-x-auto pb-0.5 min-w-0 scroll-smooth">
+                {categories.map((category) => {
+                  const active = activeCategory === category;
+                  return (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => setActiveCategory(category)}
+                      aria-pressed={active}
+                      className={`h-9 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                        active
+                          ? "bg-primary text-white shadow-sm shadow-primary/20"
+                          : "border border-primary/[0.12] bg-surface-lowest text-foreground/70 hover:border-primary/25 hover:bg-surface-low"
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-sm text-foreground/50 shrink-0 tabular-nums">
+                {filteredDoctors.length} practitioner{filteredDoctors.length === 1 ? "" : "s"}
+              </p>
             </div>
-          </div>
+          </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
             {filteredDoctors.map((doctor) => (
