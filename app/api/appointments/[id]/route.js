@@ -5,6 +5,10 @@ import {
 } from "@/lib/appointment-lifecycle";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications/notifications";
+import {
+  PAYMENT_REQUIRED_BEFORE_START_MESSAGE,
+  requiresPaymentBeforeConsultation,
+} from "@/lib/payments/consultation-gate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,6 +72,12 @@ export async function PATCH(request, { params }) {
     }
     if (auth.user.role === "PATIENT" && status !== "CANCELLED") {
       return Response.json({ ok: false, error: "Patients can only cancel appointments." }, { status: 403 });
+    }
+    if (status === "ONGOING" && requiresPaymentBeforeConsultation(appointment)) {
+      return Response.json(
+        { ok: false, error: PAYMENT_REQUIRED_BEFORE_START_MESSAGE },
+        { status: 403 }
+      );
     }
     if (
       auth.user.role !== "PATIENT" &&

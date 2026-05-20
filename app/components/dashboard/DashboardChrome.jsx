@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, LayoutDashboard, Menu, Search, X } from "lucide-react";
-import { dashboardHomeForRole } from "@/lib/dashboard-routes";
+import { Activity, Menu, Search, X } from "lucide-react";
 import { DashboardSidebarContents } from "./DashboardSidebarContents";
 import { motion } from "framer-motion";
 import NotificationBell from "./NotificationBell";
+import { DashboardUserMenu } from "./DashboardUserMenu";
 
 const ROLE_LABEL = {
   ADMIN: "Administrator",
@@ -24,17 +24,6 @@ const SEARCH_PLACEHOLDER = {
 function shortPatientId(id) {
   const tail = id.replace(/[^a-z0-9]/gi, "").slice(-6);
   return tail ? `CH-${tail.toUpperCase()}` : "CH-000000";
-}
-
-function initialsOf(name = "") {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase() ?? "")
-      .join("") || "?"
-  );
 }
 
 export function DashboardChrome({ user, children }) {
@@ -59,7 +48,6 @@ export function DashboardChrome({ user, children }) {
   }, [mobileOpen, close]);
 
   const searchPh = SEARCH_PLACEHOLDER[user.role] ?? SEARCH_PLACEHOLDER.ADMIN;
-  const dashboardHome = dashboardHomeForRole(user.role);
 
   if (isSetup) {
     return (
@@ -113,15 +101,7 @@ export function DashboardChrome({ user, children }) {
               >
                 <Menu size={20} />
               </button>
-              <Link
-                href={dashboardHome}
-                className="lg:hidden inline-flex items-center gap-1.5 shrink-0 rounded-lg border border-primary/[0.12] bg-surface-lowest px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 hover:border-primary/25 transition-colors"
-                title="Go to dashboard"
-              >
-                <LayoutDashboard size={14} aria-hidden />
-                Dashboard
-              </Link>
-              <div className="flex-1 max-w-md relative min-w-0">
+              <div className="flex-1 max-w-md relative min-w-0 hidden sm:block">
                 <Search
                   size={15}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none"
@@ -137,23 +117,14 @@ export function DashboardChrome({ user, children }) {
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <NotificationBell />
 
-              <Link
-                href={dashboardHome}
-                className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 rounded-lg hover:bg-surface-high/80 transition-colors pr-1 -mr-1"
-                title="Dashboard home"
-              >
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold leading-tight">{user.name}</p>
-                  <p className="text-[11px] text-foreground/50 leading-tight">
-                    {user.role === "PATIENT"
-                      ? `Patient ID · ${shortPatientId(user.id)}`
-                      : ROLE_LABEL[user.role] ?? user.role}
-                  </p>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold font-manrope">
-                  {initialsOf(user.name)}
-                </div>
-              </Link>
+              <DashboardUserMenu
+                user={user}
+                subtitle={
+                  user.role === "PATIENT"
+                    ? `Patient ID · ${shortPatientId(user.id)}`
+                    : ROLE_LABEL[user.role] ?? user.role
+                }
+              />
             </div>
           </div>
         </header>

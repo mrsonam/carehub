@@ -12,7 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 import { AppointmentStatusBadge } from "../appointments/AppointmentStatusBadge";
-import { formatApptTime, formatRelative, initialsFromName } from "@/lib/dashboard-format";
+import { formatApptTime, formatRelative } from "@/lib/dashboard-format";
+import { UserAvatar } from "@/app/components/profile/UserAvatar";
 
 const SORTS = [
   { id: "recent", label: "Recent activity" },
@@ -133,9 +134,11 @@ export function DoctorPatientDirectory({ patients }) {
               className="flex flex-col gap-4 p-4 sm:p-5 sm:flex-row sm:items-start sm:justify-between hover:bg-surface-low/50 transition-colors"
             >
               <div className="flex gap-4 min-w-0 flex-1">
-                <span className="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-sm font-bold font-manrope">
-                  {initialsFromName(p.patientName)}
-                </span>
+                <UserAvatar
+                  name={p.patientName}
+                  avatarUrl={p.avatarUrl}
+                  className="w-11 h-11 rounded-full"
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold font-manrope text-base truncate">{p.patientName}</p>

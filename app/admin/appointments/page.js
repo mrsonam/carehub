@@ -4,6 +4,7 @@ import { autoCloseExpiredAppointments } from "@/lib/appointment-lifecycle";
 import { prisma } from "@/lib/prisma";
 import { AppointmentBookingForm } from "../../components/appointments/AppointmentBookingForm";
 import AppointmentsWorkspace from "../../components/admin/AppointmentsWorkspace";
+import AdminAppointmentsCalendar from "../../components/admin/AdminAppointmentsCalendar";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function AdminAppointmentsPage() {
   const [appointments, doctors, patients] = await Promise.all([
     prisma.appointment.findMany({
       orderBy: { scheduledAt: "asc" },
-      take: 100,
+      take: 250,
     }),
     prisma.user.findMany({
       where: { role: "DOCTOR" },
@@ -40,6 +41,13 @@ export default async function AdminAppointmentsPage() {
       </div>
 
       <AppointmentBookingForm doctors={doctors} patients={patients} mode="admin" />
+
+      <AdminAppointmentsCalendar
+        appointments={appointments.map((appt) => ({
+          ...appt,
+          scheduledAt: appt.scheduledAt.toISOString(),
+        }))}
+      />
 
       <AppointmentsWorkspace
         appointments={appointments.map((appt) => ({

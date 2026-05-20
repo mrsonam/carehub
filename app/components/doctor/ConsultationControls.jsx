@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClipboardPenLine, Play, UserX, CheckCircle2, ExternalLink } from "lucide-react";
 import { isWithinConsultationActionWindow } from "@/lib/appointment-lifecycle";
+import {
+  PAYMENT_REQUIRED_BEFORE_START_MESSAGE,
+  requiresPaymentBeforeConsultation,
+} from "@/lib/payments/consultation-gate";
 import { useToast } from "@/app/components/toast/ToastProvider";
 
 const ACTIONS = {
@@ -43,6 +47,7 @@ export function ConsultationControls({ appointment }) {
   const actions = ACTIONS[appointment.status] ?? [];
   const isOngoing = appointment.status === "ONGOING";
   const inWindow = isWithinConsultationActionWindow(appointment);
+  const paymentBlocksStart = requiresPaymentBeforeConsultation(appointment);
 
   const patchAppointment = async ({ status }) => {
     if (pending) return;
@@ -64,7 +69,6 @@ export function ConsultationControls({ appointment }) {
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
         setError(data.error || "Could not update consultation.");
-        toast.error(data.error || "Could not update consultation.");
         return;
       }
       if (status === "ONGOING") {
@@ -116,7 +120,9 @@ export function ConsultationControls({ appointment }) {
         <div className="flex flex-wrap gap-2">
           {actions.map((action) => {
             const requiresWindow = action.status === "ONGOING" || action.status === "NO_SHOW";
-            const disabled = Boolean(pending) || (requiresWindow && !inWindow);
+            const blockedByPayment = action.status === "ONGOING" && paymentBlocksStart;
+            const disabled =
+              Boolean(pending) || blockedByPayment || (requiresWindow && !inWindow);
             const Icon = action.icon;
             return (
               <motion.button
@@ -156,6 +162,16 @@ export function ConsultationControls({ appointment }) {
               className="text-xs font-semibold text-secondary"
             >
               {message}
+            </motion.p>
+          ) : paymentBlocksStart && appointment.status === "CONFIRMED" ? (
+            <motion.p
+              key="payment"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="text-xs text-amber-700"
+            >
+              {PAYMENT_REQUIRED_BEFORE_START_MESSAGE}
             </motion.p>
           ) : !inWindow && appointment.status === "CONFIRMED" ? (
             <motion.p

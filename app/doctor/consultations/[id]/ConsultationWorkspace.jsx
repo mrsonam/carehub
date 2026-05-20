@@ -39,7 +39,6 @@ export function ConsultationWorkspace({ appointment }) {
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
         setError(data.error || "Could not update consultation.");
-        toast.error(data.error || "Could not update consultation.");
         return;
       }
       setMessage("Consultation updated.");

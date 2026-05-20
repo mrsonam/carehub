@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CalendarClock, ClipboardList, UserRound, Users } from "lucide-react";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
 import { DoctorPatientDirectory } from "../../components/doctor/DoctorPatientDirectory";
 import { DoctorPatientsAnalytics } from "../../components/doctor/DoctorPatientsAnalytics";
@@ -174,29 +175,45 @@ export default async function DoctorPatientsPage() {
 
   const patients = buildPatientSummaries(appointments);
 
+  const portalIds = [...new Set(patients.map((p) => p.patientId).filter(Boolean))];
+  const portalUsers =
+    portalIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: portalIds } },
+          select: { id: true, avatarUrl: true, updatedAt: true },
+        })
+      : [];
+  const avatarByPatientId = Object.fromEntries(
+    portalUsers.map((u) => [u.id, avatarDisplayUrl(u.avatarUrl, u.updatedAt)])
+  );
+  const patientsWithAvatars = patients.map((p) => ({
+    ...p,
+    avatarUrl: p.patientId ? avatarByPatientId[p.patientId] ?? null : null,
+  }));
+
   const now = Date.now();
-  const withUpcoming = patients.filter((p) => {
+  const withUpcoming = patientsWithAvatars.filter((p) => {
     if (p.ongoing) return true;
     if (!p.nextAppt) return false;
     return new Date(p.nextAppt.scheduledAt).getTime() >= now && !TERMINAL.has(p.nextAppt.status);
   }).length;
 
-  const flagged = patients.filter((p) => p.urgent).length;
+  const flagged = patientsWithAvatars.filter((p) => p.urgent).length;
 
   const monthlyVolume = buildMonthlyVolume(appointments);
   const statusSlices = buildStatusSlices(appointments);
-  const topPatients = [...patients]
+  const topPatients = [...patientsWithAvatars]
     .sort((a, b) => b.visitCount - a.visitCount)
     .slice(0, 5)
     .map((p) => ({ patientName: p.patientName, visitCount: p.visitCount }));
 
   return (
     <div className="max-w-5xl mx-auto w-full flex flex-col gap-8">
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric
           icon={Users}
           label="Unique patients"
-          value={patients.length}
+          value={patientsWithAvatars.length}
           hint="Distinct names on your appointments"
         />
         <Metric
@@ -240,7 +257,7 @@ export default async function DoctorPatientsPage() {
           the most recent record.
         </p>
         <div className="mt-6">
-          <DoctorPatientDirectory patients={patients} />
+          <DoctorPatientDirectory patients={patientsWithAvatars} />
         </div>
       </section>
     </div>

@@ -90,3 +90,39 @@ a, button {
 .hairline {
   border-color: rgba(0, 72, 141, 0.06);
 }
+
+/* Horizontal scroll for 7-column week/month grids on narrow viewports */
+.scroll-calendar {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-inline: -0.25rem;
+  padding-inline: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .scroll-calendar {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+.scroll-calendar-inner {
+  min-width: 20rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .scroll-calendar-inner {
+    min-width: 0;
+  }
+}
+
+.scroll-calendar-inner--month {
+  min-width: 36rem;
+}
+
+@media (min-width: 1024px) {
+  .scroll-calendar-inner--month {
+    min-width: 0;
+  }
+}

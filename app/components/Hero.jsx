@@ -6,7 +6,7 @@ import { Clock, ShieldCheck, CalendarCheck } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-surface py-20 px-20 sm:py-32">
+    <section className="relative overflow-hidden bg-surface py-16 px-4 sm:py-24 sm:px-8 lg:px-20 lg:py-32">
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
       
@@ -20,7 +20,7 @@ export default function Hero() {
             <ShieldCheck size={14} />
             Digital-First Community Clinic
           </div>
-          <h1 className="text-5xl md:text-6xl font-extrabold font-manrope tracking-tight text-foreground leading-[1.1] mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold font-manrope tracking-tight text-foreground leading-[1.1] mb-6">
             Modern Care for Our <span className="text-primary italic">Local Community.</span>
           </h1>
           <p className="text-lg text-foreground/60 leading-relaxed mb-10 max-w-lg">
@@ -66,7 +66,7 @@ export default function Hero() {
             <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-60" />
             <div className="absolute bottom-0 left-0 p-8 text-white w-full">
               <h3 className="text-2xl font-bold font-manrope">Dr. Sarah Mitchell</h3>
-              <p className="text-white/80 font-medium whitespace-nowrap">Resident General Practitioner</p>
+              <p className="text-white/80 font-medium">Resident General Practitioner</p>
             </div>
           </div>
           

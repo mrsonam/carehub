@@ -16,7 +16,7 @@ export default function Home() {
       <TrustSection />
 
       {/* Final CTA Section */}
-      <section className="py-24 bg-surface px-20">
+      <section className="py-16 sm:py-24 bg-surface px-4 sm:px-8 lg:px-20">
         <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

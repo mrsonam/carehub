@@ -8,9 +8,10 @@ import {
   Clock,
   Users,
   Stethoscope,
-  ClipboardList,
   BarChart3,
   UserPlus,
+  CircleDollarSign,
+  User,
 } from "lucide-react";
 
 const NAV_BY_ROLE = {
@@ -20,7 +21,7 @@ const NAV_BY_ROLE = {
     { name: "Appointments", href: "/admin/appointments", icon: CalendarDays },
     { name: "Patients", href: "/admin/patients", icon: Users },
     { name: "Doctors", href: "/admin/doctors", icon: Stethoscope },
-    { name: "Activity", href: "/admin/activity", icon: ClipboardList },
+    { name: "Fees", href: "/admin/settings/fees", icon: CircleDollarSign },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   ],
   DOCTOR: [
@@ -28,11 +29,13 @@ const NAV_BY_ROLE = {
     { name: "Schedule", href: "/doctor/schedule", icon: CalendarDays },
     { name: "Availability", href: "/doctor/availability", icon: Clock },
     { name: "Patients", href: "/doctor/patients", icon: Users },
+    { name: "Profile", href: "/doctor/profile", icon: User },
   ],
   PATIENT: [
     { name: "Overview", href: "/patient/dashboard", icon: LayoutDashboard },
     { name: "Appointments", href: "/patient/appointments", icon: CalendarDays },
     { name: "Doctors", href: "/patient/doctors", icon: Stethoscope },
+    { name: "Profile", href: "/patient/profile", icon: User },
   ],
 };
 

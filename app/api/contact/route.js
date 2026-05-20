@@ -12,27 +12,21 @@ export async function POST(req) {
   const senderEmail = body?.email?.trim?.().toLowerCase?.();
   const message = body?.message?.trim?.();
 
-  if (!senderName || !senderEmail || !message) {
-    return Response.json(
-      { ok: false, error: "Name, email, and message are required." },
-      { status: 400 }
-    );
+  const fieldErrors = {};
+  if (!senderName) fieldErrors.name = "Name is required.";
+  else if (senderName.length > MAX_NAME) fieldErrors.name = "Name is too long.";
+  if (!senderEmail) fieldErrors.email = "Email is required.";
+  else if (!/^\S+@\S+\.\S+$/.test(senderEmail)) {
+    fieldErrors.email = "Enter a valid email address.";
   }
-  if (senderName.length > MAX_NAME) {
-    return Response.json(
-      { ok: false, error: "Name is too long." },
-      { status: 400 }
-    );
+  if (!message) fieldErrors.message = "Message is required.";
+  else if (message.length > MAX_MESSAGE) {
+    fieldErrors.message = `Message must be ${MAX_MESSAGE} characters or fewer.`;
   }
-  if (!/^\S+@\S+\.\S+$/.test(senderEmail)) {
+
+  if (Object.keys(fieldErrors).length > 0) {
     return Response.json(
-      { ok: false, error: "Enter a valid email address." },
-      { status: 400 }
-    );
-  }
-  if (message.length > MAX_MESSAGE) {
-    return Response.json(
-      { ok: false, error: "Message is too long." },
+      { ok: false, error: "Please fix the highlighted fields.", fieldErrors },
       { status: 400 }
     );
   }

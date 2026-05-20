@@ -7,7 +7,15 @@ import { CalendarClock, Eye, Search } from "lucide-react";
 import {
   isWithinConsultationActionWindow,
 } from "@/lib/appointment-lifecycle";
+import { requiresPaymentBeforeConsultation } from "@/lib/payments/consultation-gate";
 import { AppointmentStatusActions } from "../appointments/AppointmentStatusActions";
+import { PaymentStatusBadge } from "../appointments/PaymentStatusBadge";
+import {
+  AppointmentListIcon,
+  AppointmentListRow,
+  appointmentRowStatusTone,
+  appointmentViewLinkClass,
+} from "../appointments/AppointmentListRow";
 import { formatApptTime } from "@/lib/dashboard-format";
 
 const FILTERS = ["ALL", "REQUESTED", "CONFIRMED", "ONGOING", "COMPLETED", "NO_SHOW", "CANCELLED"];
@@ -27,7 +35,11 @@ function actionsFor(appointment) {
   if (status === "REQUESTED") return ["CONFIRMED", "CANCELLED"];
   if (status === "CONFIRMED") {
     const inWindow = isWithinConsultationActionWindow(appointment);
-    return inWindow ? ["ONGOING", "NO_SHOW", "CANCELLED"] : ["CANCELLED"];
+    if (!inWindow) return ["CANCELLED"];
+    const startActions = requiresPaymentBeforeConsultation(appointment)
+      ? []
+      : ["ONGOING"];
+    return [...startActions, "NO_SHOW", "CANCELLED"];
   }
   if (status === "ONGOING") {
     return ["COMPLETED"];
@@ -75,16 +87,8 @@ export default function AppointmentsWorkspace({ appointments = [] }) {
     });
   }, [allRows, query, scope, statusFilter]);
 
-  function metaTone(status) {
-    if (status === "COMPLETED") return "bg-emerald-500/10 text-emerald-700 border-emerald-500/20";
-    if (status === "CANCELLED") return "bg-red-500/10 text-red-700 border-red-500/20";
-    if (status === "NO_SHOW") return "bg-slate-500/10 text-slate-700 border-slate-500/20";
-    if (status === "ONGOING") return "bg-primary/10 text-primary border-primary/20";
-    return "bg-surface-low text-foreground/60 border-primary/[0.08]";
-  }
-
   return (
-    <section className="panel p-6">
+    <section className="panel p-4 sm:p-6">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -198,7 +202,7 @@ export default function AppointmentsWorkspace({ appointments = [] }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="divide-y divide-primary/[0.06]"
+              className="flex flex-col gap-2.5"
             >
               {filtered.map((appt, index) => (
                 <motion.li
@@ -206,26 +210,31 @@ export default function AppointmentsWorkspace({ appointments = [] }) {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.22, delay: Math.min(index * 0.02, 0.16) }}
-                  className="group flex flex-col gap-3 py-4 text-sm first:pt-0 last:pb-0 rounded-xl border border-transparent sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:px-3 transition-colors"
+                  className="list-none"
                 >
-                  <div className="flex gap-3 min-w-0 flex-1">
-                    <span className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                      <CalendarClock size={16} />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold">
-                        {formatApptTime(appt.scheduledAt)} · {appt.durationMinutes ?? 15} min
-                      </p>
-                      <p className="text-xs text-foreground/50 mt-0.5">
+                  <AppointmentListRow
+                    id={appt.id}
+                    icon={
+                      <AppointmentListIcon>
+                        <CalendarClock size={16} aria-hidden />
+                      </AppointmentListIcon>
+                    }
+                    title={`${formatApptTime(appt.scheduledAt)} · ${appt.durationMinutes ?? 15} min`}
+                    subtitle={
+                      <>
                         {appt.patientName}
                         {appt.doctorName ? ` · ${appt.doctorName}` : " · Clinician TBD"}
-                        {appt.patientNotes || appt.notes
-                          ? ` · Patient: ${appt.patientNotes ?? appt.notes}`
-                          : ""}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      </>
+                    }
+                    note={
+                      appt.patientNotes || appt.notes
+                        ? `Patient: ${appt.patientNotes ?? appt.notes}`
+                        : null
+                    }
+                    badges={
+                      <>
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold ${metaTone(
+                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold ${appointmentRowStatusTone(
                             appt.status
                           )}`}
                         >
@@ -234,24 +243,27 @@ export default function AppointmentsWorkspace({ appointments = [] }) {
                         <span className="inline-flex items-center rounded-full border border-primary/[0.08] bg-surface-low px-2.5 py-1 text-[10px] font-semibold text-foreground/55">
                           {appt.bucket === "PAST" ? "History" : "Upcoming"}
                         </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start justify-between gap-2 sm:flex-col sm:items-end sm:justify-start">
-                    <div className="flex items-center gap-2">
-                      <AppointmentStatusActions appointmentId={appt.id} actions={actionsFor(appt)} />
-                      {appt.status !== "CANCELLED" ? (
-                        <Link
-                          href={`/admin/appointments/${appt.id}`}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-primary/[0.12] text-primary hover:bg-primary/10 transition-colors"
-                          aria-label="View appointment details"
-                          title="View details"
-                        >
-                          <Eye size={15} />
-                        </Link>
-                      ) : null}
-                    </div>
-                  </div>
+                        {Number(appt.feeAmountCents ?? 0) > 0 ? (
+                          <PaymentStatusBadge paymentStatus={appt.paymentStatus} />
+                        ) : null}
+                      </>
+                    }
+                    actions={
+                      <>
+                        <AppointmentStatusActions appointmentId={appt.id} actions={actionsFor(appt)} />
+                        {appt.status !== "CANCELLED" ? (
+                          <Link
+                            href={`/admin/appointments/${appt.id}`}
+                            className={appointmentViewLinkClass}
+                            aria-label="View appointment details"
+                            title="View details"
+                          >
+                            <Eye size={15} aria-hidden />
+                          </Link>
+                        ) : null}
+                      </>
+                    }
+                  />
                 </motion.li>
               ))}
             </motion.ul>

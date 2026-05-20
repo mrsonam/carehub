@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DashboardChrome } from "./DashboardChrome";
+import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
 
 export async function DashboardRoleLayout({ children }) {
   const cookieStore = await cookies();
@@ -12,9 +13,25 @@ export async function DashboardRoleLayout({ children }) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, name: true, email: true, role: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      avatarUrl: true,
+      updatedAt: true,
+    },
   });
   if (!user) redirect("/login?next=/dashboard");
 
-  return <DashboardChrome user={user}>{children}</DashboardChrome>;
+  return (
+    <DashboardChrome
+      user={{
+        ...user,
+        avatarUrl: avatarDisplayUrl(user.avatarUrl, user.updatedAt),
+      }}
+    >
+      {children}
+    </DashboardChrome>
+  );
 }

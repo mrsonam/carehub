@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Plus,
   Trash2,
@@ -14,8 +12,11 @@ import {
   XCircle,
 } from "lucide-react";
 import { useToast } from "@/app/components/toast/ToastProvider";
+import { FormAlert } from "@/app/components/forms/FormField";
+import { FORM_ERROR_KEY } from "@/lib/forms/validate";
+import { CalendarShell } from "@/app/components/calendar/CalendarShell";
+import { displayDay, parseDateKey, todayKey } from "@/lib/calendar/dates";
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const FULL_WEEKDAYS = [
   "Monday",
   "Tuesday",
@@ -50,22 +51,6 @@ function allTimeOptions(step = 15) {
   }).filter((option) => option.minutes <= 24 * 60);
 }
 
-function dateKey(date) {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-
-function monthTitle(date) {
-  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-}
-
-function displayDate(date) {
-  return date.toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 function groupBy(items, key) {
   return items.reduce((acc, item) => {
     const k = key(item);
@@ -77,25 +62,6 @@ function groupBy(items, key) {
 
 function blockLabel(block) {
   return `${minutesToTime(block.startMinutes)}-${minutesToTime(block.endMinutes)}`;
-}
-
-function monthGrid(monthDate) {
-  const first = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-  const start = new Date(first);
-  start.setDate(first.getDate() - first.getDay());
-  start.setHours(0, 0, 0, 0);
-
-  return Array.from({ length: 42 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    return d;
-  });
-}
-
-function isoToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return dateKey(d);
 }
 
 function sortBlocks(blocks) {
@@ -219,7 +185,6 @@ function BlockFormModal({ modal, onClose, onDone }) {
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      toast.error("This availability block overlaps an existing one.");
       return;
     }
 
@@ -241,7 +206,7 @@ function BlockFormModal({ modal, onClose, onDone }) {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not save availability.");
+        setErrors({ [FORM_ERROR_KEY]: data.error || "Could not save availability." });
         return;
       }
       toast.success("Availability saved.");
@@ -262,7 +227,7 @@ function BlockFormModal({ modal, onClose, onDone }) {
       );
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not remove availability.");
+        setErrors({ [FORM_ERROR_KEY]: data.error || "Could not remove availability." });
         return;
       }
       toast.success("Availability removed.");
@@ -287,7 +252,8 @@ function BlockFormModal({ modal, onClose, onDone }) {
       subtitle={`${modal.type === "rule" ? "Weekly default" : "Date override"} · ${label}`}
       onClose={onClose}
     >
-      <form onSubmit={save} className="grid gap-5">
+      <form onSubmit={save} className="grid gap-5" noValidate>
+        <FormAlert message={errors[FORM_ERROR_KEY]} />
         <div className="grid grid-cols-2 gap-3">
           <label className="grid gap-1.5">
             <span className="text-xs font-semibold text-foreground/60">Start</span>
@@ -389,6 +355,120 @@ function AvailabilityPill({ block, onClick, compact = false }) {
   );
 }
 
+function dayPlannerState(key, day, overridesByDate, rulesByWeekday) {
+  const overridesForDay = overridesByDate[key] ?? [];
+  const unavailable = overridesForDay.some((o) => o.isUnavailable);
+  const customBlocks = sortBlocks(overridesForDay.filter((o) => !o.isUnavailable));
+  const defaultBlocks = sortBlocks(rulesByWeekday[String(day.getDay())] ?? []);
+  const blocks = unavailable
+    ? []
+    : customBlocks.length > 0
+      ? customBlocks
+      : defaultBlocks;
+  const marker = unavailable
+    ? "OFF"
+    : customBlocks.length > 0
+      ? "CUSTOM"
+      : blocks.length > 0
+        ? "DEFAULT"
+        : "NONE";
+  return { unavailable, customBlocks, defaultBlocks, blocks, marker };
+}
+
+function plannerDayMeta(key, day, overridesByDate, rulesByWeekday) {
+  const { marker, blocks } = dayPlannerState(key, day, overridesByDate, rulesByWeekday);
+  if (marker === "OFF") return { tone: "off" };
+  if (marker === "CUSTOM") return { tone: "busy", badge: blocks.length };
+  if (marker === "DEFAULT") return { tone: "default" };
+  return {};
+}
+
+function PlannerMobilePanel({
+  selectedDate,
+  selectedUnavailable,
+  effectiveBlocks,
+  overrideBlocks,
+  selectedRuleBlocks,
+  pendingDay,
+  dayActionError,
+  onAddOverride,
+  onEditBlock,
+  onMarkUnavailable,
+  onClearDayOverride,
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <p className="text-[11px] font-bold uppercase tracking-widest text-foreground/45">
+        {displayDay(selectedDate)}
+      </p>
+      <div className="mt-3 rounded-xl bg-surface-lowest border border-primary/[0.08] p-3">
+        <p className="text-xs font-bold uppercase tracking-widest text-foreground/45">
+          Effective hours
+        </p>
+        {effectiveBlocks.length === 0 ? (
+          <p className="mt-2 text-sm text-foreground/55">
+            {selectedUnavailable ? "This day is blocked out." : "No availability for this date."}
+          </p>
+        ) : (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {effectiveBlocks.map((block) => (
+              <AvailabilityPill
+                key={block.id}
+                block={block}
+                compact
+                onClick={() =>
+                  onEditBlock(
+                    block,
+                    overrideBlocks.length > 0 ? overrideBlocks : selectedRuleBlocks,
+                    overrideBlocks.length > 0 ? "override" : "rule"
+                  )
+                }
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="mt-3 grid gap-2">
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.98 }}
+          onClick={onAddOverride}
+          className="h-10 rounded-xl bg-primary text-white text-sm font-semibold inline-flex items-center justify-center gap-2"
+        >
+          <Plus size={15} />
+          Add date override
+        </motion.button>
+        <div className="grid grid-cols-2 gap-2">
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.98 }}
+            disabled={Boolean(pendingDay)}
+            onClick={onMarkUnavailable}
+            className="h-9 rounded-xl border border-red-500/20 text-red-700 text-xs font-semibold hover:bg-red-500/10 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
+          >
+            <XCircle size={14} />
+            {pendingDay === "unavailable" ? "Saving" : "Mark off"}
+          </motion.button>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.98 }}
+            disabled={Boolean(pendingDay)}
+            onClick={onClearDayOverride}
+            className="h-9 rounded-xl border border-primary/[0.12] text-foreground/70 text-xs font-semibold hover:bg-surface-low disabled:opacity-50"
+          >
+            {pendingDay === "clear" ? "Clearing" : "Use default"}
+          </motion.button>
+        </div>
+        <FormAlert message={dayActionError} />
+      </div>
+    </motion.div>
+  );
+}
+
 function Segmented({ value, options, onChange }) {
   return (
     <div className="inline-flex rounded-xl border border-primary/[0.1] p-1 bg-surface-low">
@@ -414,15 +494,16 @@ function Segmented({ value, options, onChange }) {
 export function AvailabilityPlanner({ rules, overrides }) {
   const router = useRouter();
   const toast = useToast();
-  const todayKey = isoToday();
+  const today = todayKey();
   const [monthDate, setMonthDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
     return d;
   });
-  const [selectedDate, setSelectedDate] = useState(todayKey);
+  const [selectedDate, setSelectedDate] = useState(today);
   const [modal, setModal] = useState(null);
   const [pendingDay, setPendingDay] = useState("");
+  const [dayActionError, setDayActionError] = useState("");
   const [inspectorTab, setInspectorTab] = useState("DAY");
 
   const rulesByWeekday = useMemo(
@@ -433,9 +514,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
     () => groupBy(overrides, (override) => override.date.slice(0, 10)),
     [overrides]
   );
-  const days = useMemo(() => monthGrid(monthDate), [monthDate]);
-
-  const selected = new Date(`${selectedDate}T00:00:00`);
+  const selected = parseDateKey(selectedDate);
   const selectedOverrides = sortBlocks(overridesByDate[selectedDate] ?? []);
   const selectedUnavailable = selectedOverrides.some((o) => o.isUnavailable);
   const selectedRuleBlocks = sortBlocks(rulesByWeekday[String(selected.getDay())] ?? []);
@@ -448,16 +527,9 @@ export function AvailabilityPlanner({ rules, overrides }) {
 
   const refresh = () => router.refresh();
 
-  const shiftMonth = (delta) => {
-    setMonthDate((current) => {
-      const next = new Date(current);
-      next.setMonth(current.getMonth() + delta);
-      return next;
-    });
-  };
-
   const markUnavailable = async () => {
     setPendingDay("unavailable");
+    setDayActionError("");
     try {
       const r = await fetch("/api/doctor/availability", {
         method: "POST",
@@ -469,7 +541,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
         refresh();
       } else {
         const data = await r.json().catch(() => ({}));
-        toast.error(data.error || "Could not update day.");
+        setDayActionError(data.error || "Could not update day.");
       }
     } finally {
       setPendingDay("");
@@ -478,6 +550,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
 
   const clearDayOverride = async () => {
     setPendingDay("clear");
+    setDayActionError("");
     try {
       const r = await fetch(`/api/doctor/availability?type=override-day&date=${selectedDate}`, {
         method: "DELETE",
@@ -487,7 +560,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
         refresh();
       } else {
         const data = await r.json().catch(() => ({}));
-        toast.error(data.error || "Could not clear override.");
+        setDayActionError(data.error || "Could not clear override.");
       }
     } finally {
       setPendingDay("");
@@ -498,171 +571,168 @@ export function AvailabilityPlanner({ rules, overrides }) {
     <>
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.25fr)_21rem] gap-6 items-start">
         <section className="panel p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+          <CalendarShell
+            monthDate={monthDate}
+            selectedDateKey={selectedDate}
+            onMonthDateChange={setMonthDate}
+            onSelectDateKey={setSelectedDate}
+            headerExtra={
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
                 Calendar
               </p>
-              <h2 className="mt-1.5 text-xl font-bold font-manrope tracking-tight">
-                {monthTitle(monthDate)}
-              </h2>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-foreground/55">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-red-500" aria-hidden />
-                  Off
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-primary" aria-hidden />
-                  Custom
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-foreground/25" aria-hidden />
-                  Default
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => shiftMonth(-1)}
-                className="w-10 h-10 rounded-xl border border-primary/[0.08] text-foreground/65 hover:bg-surface-low inline-flex items-center justify-center"
-                aria-label="Previous month"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = new Date();
-                  d.setDate(1);
-                  setMonthDate(d);
-                  setSelectedDate(todayKey);
-                }}
-                className="h-10 px-4 rounded-xl border border-primary/[0.08] text-sm font-semibold text-foreground/70 hover:bg-surface-low"
-              >
-                Today
-              </button>
-              <button
-                type="button"
-                onClick={() => shiftMonth(1)}
-                className="w-10 h-10 rounded-xl border border-primary/[0.08] text-foreground/65 hover:bg-surface-low inline-flex items-center justify-center"
-                aria-label="Next month"
-              >
-                <ChevronRight size={18} />
-              </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 overflow-hidden rounded-[1.75rem] border border-primary/[0.08] bg-surface-low shadow-sm shadow-primary/5">
-            <div className="grid grid-cols-7 border-b border-primary/[0.06] bg-surface-low">
-              {WEEKDAYS.map((day) => (
-                <div
-                  key={day}
-                  className="px-3 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/45"
-                >
-                  {day}
+            }
+            legend={
+              <motion.div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-foreground/55">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500" aria-hidden />
+                    Off
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-primary" aria-hidden />
+                    Custom
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-foreground/25" aria-hidden />
+                    Default
+                  </span>
                 </div>
-              ))}
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    d.setDate(1);
+                    setMonthDate(d);
+                    setSelectedDate(today);
+                  }}
+                  className="h-10 px-4 rounded-xl border border-primary/[0.08] text-sm font-semibold text-foreground/70 hover:bg-surface-low shrink-0"
+                >
+                  Today
+                </button>
+              </motion.div>
+            }
+            getDayMeta={(key) => {
+              const day = parseDateKey(key);
+              return plannerDayMeta(key, day, overridesByDate, rulesByWeekday);
+            }}
+            desktopMinCellClassName="min-h-[7rem] border-t border-r border-primary/[0.06]"
+            renderDesktopDay={(day, key) => {
+              const { unavailable, blocks, marker } = dayPlannerState(
+                key,
+                day,
+                overridesByDate,
+                rulesByWeekday
+              );
+              const isSelected = key === selectedDate;
+              const isToday = key === today;
+              const isOtherMonth = day.getMonth() !== monthDate.getMonth();
 
-            <div className="grid grid-cols-7">
-              {days.map((day) => {
-                const key = dateKey(day);
-                const overridesForDay = overridesByDate[key] ?? [];
-                const unavailable = overridesForDay.some((o) => o.isUnavailable);
-                const customBlocks = sortBlocks(overridesForDay.filter((o) => !o.isUnavailable));
-                const defaultBlocks = sortBlocks(rulesByWeekday[String(day.getDay())] ?? []);
-                const blocks = unavailable
-                  ? []
-                  : customBlocks.length > 0
-                    ? customBlocks
-                    : defaultBlocks;
-                const isSelected = key === selectedDate;
-                const isToday = key === todayKey;
-                const isOtherMonth = day.getMonth() !== monthDate.getMonth();
-                const marker =
-                  unavailable ? "OFF" : customBlocks.length > 0 ? "CUSTOM" : blocks.length > 0 ? "DEFAULT" : "NONE";
-
-                return (
-                  <motion.button
-                    key={key}
-                    type="button"
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => setSelectedDate(key)}
-                    className={`min-h-[7rem] border-r border-b border-primary/[0.06] p-3 text-left transition-colors ${
-                      isSelected
-                        ? "bg-primary/[0.08] ring-2 ring-inset ring-primary/30"
-                        : "hover:bg-surface-low"
-                    } ${isOtherMonth ? "bg-surface-lowest/35 text-foreground/35" : "bg-surface-lowest"}`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold font-manrope ${
-                          isToday
-                            ? "bg-primary text-white"
-                            : isSelected
-                              ? "text-primary"
-                              : "text-foreground/75"
-                        }`}
-                      >
-                        {day.getDate()}
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-1.5 text-[10px] font-semibold ${
-                          marker === "OFF"
-                            ? "text-red-700"
-                            : marker === "CUSTOM"
-                              ? "text-primary"
-                              : marker === "DEFAULT"
-                                ? "text-foreground/55"
-                                : "text-foreground/35"
-                        }`}
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            marker === "OFF"
-                              ? "bg-red-500"
-                              : marker === "CUSTOM"
-                                ? "bg-primary"
-                                : marker === "DEFAULT"
-                                  ? "bg-foreground/25"
-                                  : "bg-foreground/15"
-                          }`}
-                          aria-hidden
-                        />
-                        {marker === "OFF"
-                          ? "Off"
+              return (
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => setSelectedDate(key)}
+                  className={`w-full min-h-[7rem] p-3 text-left transition-colors ${
+                    isSelected
+                      ? "bg-primary/[0.08] ring-2 ring-inset ring-primary/30"
+                      : "hover:bg-surface-low"
+                  } ${isOtherMonth ? "bg-surface-lowest/35 text-foreground/35" : "bg-surface-lowest"}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold font-manrope ${
+                        isToday
+                          ? "bg-primary text-white"
+                          : isSelected
+                            ? "text-primary"
+                            : "text-foreground/75"
+                      }`}
+                    >
+                      {day.getDate()}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold ${
+                        marker === "OFF"
+                          ? "text-red-700"
                           : marker === "CUSTOM"
-                            ? "Custom"
+                            ? "text-primary"
                             : marker === "DEFAULT"
-                              ? "Default"
-                              : "—"}
-                      </span>
-                    </div>
+                              ? "text-foreground/55"
+                              : "text-foreground/35"
+                      }`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          marker === "OFF"
+                            ? "bg-red-500"
+                            : marker === "CUSTOM"
+                              ? "bg-primary"
+                              : marker === "DEFAULT"
+                                ? "bg-foreground/25"
+                                : "bg-foreground/15"
+                        }`}
+                        aria-hidden
+                      />
+                      {marker === "OFF"
+                        ? "Off"
+                        : marker === "CUSTOM"
+                          ? "Custom"
+                          : marker === "DEFAULT"
+                            ? "Default"
+                            : "—"}
+                    </span>
+                  </div>
 
-                    <div className="mt-3 flex flex-col gap-1">
-                      {blocks.length === 0 ? (
-                        <span className="text-[11px] text-foreground/35">
-                          {unavailable ? "Unavailable" : "No hours"}
+                  <div className="mt-3 flex flex-col gap-1">
+                    {blocks.length === 0 ? (
+                      <span className="text-[11px] text-foreground/35">
+                        {unavailable ? "Unavailable" : "No hours"}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-[11px] font-semibold text-foreground/65 truncate">
+                          {blockLabel(blocks[0])}
                         </span>
-                      ) : (
-                        <>
-                          <span className="text-[11px] font-semibold text-foreground/65 truncate">
-                            {blockLabel(blocks[0])}
-                          </span>
-                          <span className="text-[10px] text-foreground/45">
-                            {blocks.length === 1 ? "1 block" : `${blocks.length} blocks`}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
+                        <span className="text-[10px] text-foreground/45">
+                          {blocks.length === 1 ? "1 block" : `${blocks.length} blocks`}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </motion.button>
+              );
+            }}
+          >
+            <PlannerMobilePanel
+              selectedDate={selectedDate}
+              selectedUnavailable={selectedUnavailable}
+              effectiveBlocks={effectiveBlocks}
+              overrideBlocks={overrideBlocks}
+              selectedRuleBlocks={selectedRuleBlocks}
+              pendingDay={pendingDay}
+              dayActionError={dayActionError}
+              onAddOverride={() =>
+                setModal({
+                  mode: "add",
+                  type: "override",
+                  date: selectedDate,
+                  existingBlocks: overrideBlocks,
+                })
+              }
+              onEditBlock={(block, existingBlocks, type) =>
+                setModal({
+                  mode: "edit",
+                  type,
+                  block,
+                  existingBlocks,
+                  weekday: selected.getDay(),
+                  date: selectedDate,
+                })
+              }
+              onMarkUnavailable={markUnavailable}
+              onClearDayOverride={clearDayOverride}
+            />
+          </CalendarShell>
         </section>
 
         <aside className="grid gap-6 xl:sticky xl:top-24">
@@ -673,7 +743,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
                   Inspector
                 </p>
                 <h2 className="mt-1.5 text-lg font-bold font-manrope tracking-tight truncate">
-                  {displayDate(selected)}
+                  {displayDay(selectedDate)}
                 </h2>
                 <p className="text-xs text-foreground/50 mt-1">
                   {overrideBlocks.length > 0 || selectedUnavailable
@@ -773,6 +843,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
                         {pendingDay === "clear" ? "Clearing" : "Use default"}
                       </motion.button>
                     </div>
+                    <FormAlert message={dayActionError} />
                   </div>
                 </motion.div>
               ) : (

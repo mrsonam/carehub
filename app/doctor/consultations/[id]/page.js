@@ -6,6 +6,7 @@ import {
   resolveAutoCloseStatus,
 } from "@/lib/appointment-lifecycle";
 import { prisma } from "@/lib/prisma";
+import { requiresPaymentBeforeConsultation } from "@/lib/payments/consultation-gate";
 import { AppointmentStatusBadge } from "../../../components/appointments/AppointmentStatusBadge";
 import { ConsultationWorkspace } from "./ConsultationWorkspace";
 
@@ -66,6 +67,9 @@ export default async function DoctorConsultationPage({ params }) {
   if (appointment.status === "CONFIRMED") {
     if (!isWithinConsultationActionWindow(appointment)) {
       redirect("/doctor/schedule");
+    }
+    if (requiresPaymentBeforeConsultation(appointment)) {
+      redirect("/doctor/schedule?payment_required=1");
     }
     await prisma.appointment.update({
       where: { id: appointment.id },

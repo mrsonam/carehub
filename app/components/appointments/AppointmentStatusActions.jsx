@@ -33,7 +33,6 @@ export function AppointmentStatusActions({ appointmentId, actions = [] }) {
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
         setError(data.error || "Could not update appointment.");
-        toast.error(data.error || "Could not update appointment.");
         return;
       }
       toast.success("Appointment updated.");

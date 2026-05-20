@@ -1,7 +1,5 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
 import {
   CalendarClock,
   Stethoscope,
@@ -10,26 +8,13 @@ import {
 } from "lucide-react";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
 import { PatientDoctorsDirectory } from "../../components/patient/PatientDoctorsDirectory";
 
 export const dynamic = "force-dynamic";
 
 const TERMINAL = new Set(["CANCELLED", "COMPLETED", "NO_SHOW"]);
-
-const DOCTOR_IMAGES = [
-  "/doctor-sarah.png",
-  "/doctor-robert.png",
-  "/doctor-elena.png",
-  "/clinic-office.png",
-];
-
-function pickImage(seed) {
-  let h = 0;
-  const s = String(seed ?? "");
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return DOCTOR_IMAGES[h % DOCTOR_IMAGES.length];
-}
 
 function patientScope(user) {
   return {
@@ -71,6 +56,8 @@ export default async function PatientDoctorsPage() {
         name: true,
         title: true,
         bio: true,
+        avatarUrl: true,
+        updatedAt: true,
       },
     }),
     prisma.doctorAvailabilityRule.groupBy({
@@ -126,7 +113,7 @@ export default async function PatientDoctorsPage() {
       name: doc.name,
       title: doc.title,
       bioPreview,
-      image: pickImage(doc.id),
+      avatarUrl: avatarDisplayUrl(doc.avatarUrl, doc.updatedAt),
       hasRules: rulesByDoctor.has(doc.id),
       visitCountWithYou,
       upcomingWithYou,
@@ -136,11 +123,10 @@ export default async function PatientDoctorsPage() {
 
   const myDoctorCount = doctors.filter((d) => d.visitCountWithYou > 0).length;
   const withSlots = doctors.filter((d) => d.hasRules).length;
-  const firstName = user.name.split(/\s+/)[0] ?? user.name;
 
   return (
     <div className="max-w-7xl mx-auto w-full flex flex-col gap-8">
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric
           icon={Stethoscope}
           label="In network"
@@ -165,67 +151,6 @@ export default async function PatientDoctorsPage() {
           value={upcomingWithCareTeam}
           hint="Across all clinicians"
         />
-      </section>
-
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="panel p-6 lg:col-span-2 flex flex-col sm:flex-row gap-5">
-          <div className="relative w-full sm:w-48 shrink-0 aspect-[4/5] sm:aspect-auto sm:h-56 rounded-xl overflow-hidden bg-surface-high ring-1 ring-primary/[0.06]">
-            <Image
-              src="/doctor-sarah.png"
-              alt=""
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, 192px"
-            />
-          </div>
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
-              Tip
-            </p>
-            <h2 className="mt-2 text-lg font-bold font-manrope tracking-tight">
-              Prefer video or after-hours?
-            </h2>
-            <p className="text-sm text-foreground/55 mt-2 leading-relaxed">
-              Add a short note when you request a visit so the front desk can match you with the right clinician
-              and modality. You can always message through{" "}
-              <Link href="/contact" className="font-semibold text-primary hover:underline">
-                Contact
-              </Link>
-              .
-            </p>
-            <Link
-              href="/patient/appointments"
-              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-container w-fit"
-            >
-              Go to appointments
-              <span aria-hidden>→</span>
-            </Link>
-          </div>
-        </div>
-
-        <div className="panel p-6 flex flex-col justify-center">
-          <PanelHead eyebrow="Shortcuts" title="Quick links" />
-          <ul className="mt-4 space-y-2 text-sm">
-            <li>
-              <Link
-                href="/patient/dashboard"
-                className="font-medium text-primary hover:underline"
-              >
-                Patient home
-              </Link>
-            </li>
-            <li>
-              <Link href="/patient/appointments" className="font-medium text-primary hover:underline">
-                Request or change visits
-              </Link>
-            </li>
-            <li>
-              <Link href="/services" className="font-medium text-primary hover:underline">
-                Services & pricing
-              </Link>
-            </li>
-          </ul>
-        </div>
       </section>
 
       <section className="panel p-6">

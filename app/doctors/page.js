@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
 import DoctorsPageClient from "./DoctorsPageClient";
 
-const DOCTOR_IMAGES = ["/doctor-sarah.png", "/doctor-robert.png", "/doctor-elena.png"];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function labelTime(minutes) {
@@ -43,6 +43,8 @@ export default async function DoctorsPage() {
       name: true,
       title: true,
       bio: true,
+      avatarUrl: true,
+      updatedAt: true,
       availabilityRules: {
         select: { weekday: true, startMinutes: true, endMinutes: true },
         orderBy: [{ weekday: "asc" }, { startMinutes: "asc" }],
@@ -51,7 +53,7 @@ export default async function DoctorsPage() {
     orderBy: { name: "asc" },
   });
 
-  const mapped = doctors.map((doctor, index) => ({
+  const mapped = doctors.map((doctor) => ({
     id: doctor.id,
     name: doctor.name,
     title: doctor.title || "Doctor",
@@ -59,7 +61,7 @@ export default async function DoctorsPage() {
     category: mapCategory(doctor.title),
     bio: doctor.bio || "Profile details will be updated soon.",
     availability: `Next: ${formatAvailability(doctor.availabilityRules)}`,
-    image: DOCTOR_IMAGES[index % DOCTOR_IMAGES.length],
+    avatarUrl: avatarDisplayUrl(doctor.avatarUrl, doctor.updatedAt),
   }));
 
   return <DoctorsPageClient doctors={mapped} />;

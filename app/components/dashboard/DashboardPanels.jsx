@@ -3,15 +3,15 @@ import { ArrowRight } from "lucide-react";
 
 export function Metric({ icon: Icon, label, value, hint }) {
   return (
-    <div className="panel p-5 flex flex-col gap-4">
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
+    <div className="panel p-4 sm:p-5 flex flex-col gap-4 min-w-0">
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary shrink-0">
         <Icon size={18} />
       </div>
-      <div>
+      <div className="min-w-0">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/45">
           {label}
         </p>
-        <p className="mt-1.5 text-3xl font-black font-manrope tracking-tight tabular-nums">
+        <p className="mt-1.5 text-2xl sm:text-3xl font-black font-manrope tracking-tight tabular-nums">
           {typeof value === "number" ? value.toLocaleString() : value}
         </p>
         {hint ? <p className="mt-1 text-xs text-foreground/50">{hint}</p> : null}
@@ -22,8 +22,8 @@ export function Metric({ icon: Icon, label, value, hint }) {
 
 export function PanelHead({ eyebrow, title, action, legend }) {
   return (
-    <div className="flex items-end justify-between gap-4">
-      <div>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+      <div className="min-w-0">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">
           {eyebrow}
         </p>
@@ -32,7 +32,7 @@ export function PanelHead({ eyebrow, title, action, legend }) {
         </h2>
       </div>
       {legend ? (
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs shrink-0">
           {legend.map((l) => (
             <span key={l.label} className="flex items-center gap-1.5">
               <span
@@ -48,7 +48,7 @@ export function PanelHead({ eyebrow, title, action, legend }) {
       {action ? (
         <Link
           href={action.href}
-          className="text-xs font-semibold text-primary hover:text-primary-container inline-flex items-center gap-1"
+          className="text-xs font-semibold text-primary hover:text-primary-container inline-flex items-center gap-1 shrink-0"
         >
           {action.label}
           <ArrowRight size={13} />

@@ -5,18 +5,17 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Activity, ArrowRight, Check, Lock, Mail, Shield, UserRound } from "lucide-react";
-import { useToast } from "@/app/components/toast/ToastProvider";
-
-const fieldClass = (hasError) =>
-  `w-full h-11 px-3.5 rounded-lg border text-sm transition-colors outline-none focus:ring-2 bg-surface-lowest ${
-    hasError
-      ? "border-red-400/80 bg-red-50/50 focus:ring-red-500/25 focus:border-red-400"
-      : "border-primary/[0.12] focus:border-primary/30 focus:ring-primary/15"
-  }`;
+import { FormAlert, formInputClass, FORM_ERROR_KEY } from "@/app/components/forms/FormField";
+import {
+  errorsFromApiResponse,
+  hasFieldErrors,
+  validateEmail,
+  validatePassword,
+  validateRequired,
+} from "@/lib/forms/validate";
 
 export default function RegisterForm() {
   const router = useRouter();
-  const toast = useToast();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
 
@@ -52,41 +51,48 @@ export default function RegisterForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setErrors({});
 
     const { name, email, password, confirmPassword } = formData;
     const nextErrors = {};
 
-    if (!name.trim()) nextErrors.name = "Full name is required.";
-    if (!email.trim()) nextErrors.email = "Email is required.";
-    else if (!/^\S+@\S+\.\S+$/.test(email.trim())) nextErrors.email = "Enter a valid email.";
-    if (!password) nextErrors.password = "Password is required.";
-    else if (password.length < 8) nextErrors.password = "Use at least 8 characters.";
+    const nameError = validateRequired(name, "Full name is required.");
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    if (nameError) nextErrors.name = nameError;
+    if (emailError) nextErrors.email = emailError;
+    if (passwordError) nextErrors.password = passwordError;
     if (!confirmPassword) nextErrors.confirmPassword = "Please confirm your password.";
     else if (password !== confirmPassword) nextErrors.confirmPassword = "Passwords do not match.";
 
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
+    setErrors(nextErrors);
+    if (hasFieldErrors(nextErrors)) return;
 
     setLoading(true);
     fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
     })
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) {
-          throw new Error(data?.error || "Registration failed.");
+          const apiErrors = errorsFromApiResponse(data, "Registration failed.");
+          if (data?.error?.toLowerCase().includes("email")) {
+            apiErrors.email = data.error;
+            delete apiErrors[FORM_ERROR_KEY];
+          }
+          setErrors(apiErrors);
+          return;
         }
+        setErrors({});
         window.dispatchEvent(new Event("auth-changed"));
         router.push(next);
         router.refresh();
       })
-      .catch((err) => {
-        toast.error(err instanceof Error ? err.message : "Registration failed.");
+      .catch(() => {
+        setErrors({
+          [FORM_ERROR_KEY]: "Could not create your account. Check your connection and try again.",
+        });
       })
       .finally(() => setLoading(false));
   };
@@ -136,7 +142,9 @@ export default function RegisterForm() {
               </li>
             </ul>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
+              <FormAlert message={errors[FORM_ERROR_KEY]} />
+
               <div>
                 <label htmlFor="reg-name" className="block text-xs font-bold uppercase tracking-wider text-foreground/45 mb-1.5">
                   Full name
@@ -153,7 +161,7 @@ export default function RegisterForm() {
                     name="name"
                     autoComplete="name"
                     placeholder="e.g. Jordan Lee"
-                    className={`${fieldClass(Boolean(errors.name))} pl-10`}
+                    className={`${formInputClass(Boolean(errors.name), "w-full h-11 px-3.5 pl-10 rounded-lg")}`}
                     value={formData.name}
                     onChange={handleChange}
                     required
@@ -178,7 +186,7 @@ export default function RegisterForm() {
                     name="email"
                     autoComplete="email"
                     placeholder="you@example.com"
-                    className={`${fieldClass(Boolean(errors.email))} pl-10`}
+                    className={`${formInputClass(Boolean(errors.email), "w-full h-11 px-3.5 pl-10 rounded-lg")}`}
                     value={formData.email}
                     onChange={handleChange}
                     required
@@ -203,7 +211,7 @@ export default function RegisterForm() {
                     name="password"
                     autoComplete="new-password"
                     placeholder="At least 8 characters"
-                    className={`${fieldClass(Boolean(errors.password))} pl-10`}
+                    className={`${formInputClass(Boolean(errors.password), "w-full h-11 px-3.5 pl-10 rounded-lg")}`}
                     value={formData.password}
                     onChange={handleChange}
                     required
@@ -242,7 +250,7 @@ export default function RegisterForm() {
                     name="confirmPassword"
                     autoComplete="new-password"
                     placeholder="Re-enter password"
-                    className={`${fieldClass(Boolean(errors.confirmPassword))} pl-10`}
+                    className={`${formInputClass(Boolean(errors.confirmPassword), "w-full h-11 px-3.5 pl-10 rounded-lg")}`}
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required

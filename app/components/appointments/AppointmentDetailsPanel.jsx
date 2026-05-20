@@ -1,6 +1,10 @@
 import { AppointmentStatusBadge } from "./AppointmentStatusBadge";
+import { PaymentStatusBadge } from "./PaymentStatusBadge";
+import { AppointmentPatientPayment } from "./AppointmentPatientPayment";
+import { AppointmentMarkPaidAtCounter } from "./AppointmentMarkPaidAtCounter";
 import { formatApptTime } from "@/lib/dashboard-format";
-import { CalendarClock, FileText, Stethoscope, UserRound } from "lucide-react";
+import { formatMoney } from "@/lib/payments/fees.js";
+import { CalendarClock, CreditCard, FileText, Stethoscope, UserRound } from "lucide-react";
 
 function formatDateTime(value) {
   if (!value) return "Not yet";
@@ -27,7 +31,23 @@ function EventRow({ label, value, done }) {
   );
 }
 
-export function AppointmentDetailsPanel({ appointment }) {
+export function AppointmentDetailsPanel({
+  appointment,
+  canPayOnline = false,
+  canMarkPaid = false,
+  role,
+}) {
+  const feeAmountCents = Number(appointment.feeAmountCents ?? 0);
+  const showPayment =
+    feeAmountCents > 0 || appointment.paymentStatus === "WAIVED";
+  const showPayActions =
+    canPayOnline &&
+    appointment.paymentStatus === "UNPAID" &&
+    feeAmountCents > 0;
+  const showMarkPaid =
+    canMarkPaid &&
+    appointment.paymentStatus === "UNPAID" &&
+    feeAmountCents > 0;
   const patientConcern = appointment.patientNotes ?? appointment.notes ?? "";
   const timeline = [
     { label: "Requested", value: formatDateTime(appointment.createdAt), done: true },
@@ -99,6 +119,35 @@ export function AppointmentDetailsPanel({ appointment }) {
           </ul>
         </div>
       </div>
+
+      {showPayment ? (
+        <div className="mt-4 rounded-xl border border-primary/[0.08] bg-surface-low p-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-foreground/45 inline-flex items-center gap-1.5">
+            <CreditCard size={14} />
+            Payment
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {feeAmountCents > 0 ? (
+              <p className="text-lg font-bold font-manrope">{formatMoney(feeAmountCents)}</p>
+            ) : null}
+            <PaymentStatusBadge paymentStatus={appointment.paymentStatus} />
+          </div>
+          {showPayActions ? (
+            <AppointmentPatientPayment
+              appointmentId={appointment.id}
+              paymentMethod={appointment.paymentMethod}
+            />
+          ) : showMarkPaid ? (
+            <AppointmentMarkPaidAtCounter appointmentId={appointment.id} />
+          ) : appointment.paymentMethod === "PAY_AT_COUNTER" &&
+            appointment.paymentStatus === "UNPAID" &&
+            feeAmountCents > 0 ? (
+            <p className="mt-3 text-sm text-foreground/60">
+              You chose to pay at the front desk. Payment is still due before your visit.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-xl border border-primary/[0.08] bg-surface-low p-4">

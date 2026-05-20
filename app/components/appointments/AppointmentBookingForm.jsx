@@ -4,48 +4,23 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  CalendarPlus,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   FileText,
   Stethoscope,
   UserRound,
 } from "lucide-react";
 import { useToast } from "@/app/components/toast/ToastProvider";
+import { PaymentChoiceStep } from "./PaymentChoiceStep";
+import { BookingDatePicker } from "./BookingDatePicker";
+import {
+  dateKey,
+  monthGrid,
+  dateKeyOffset,
+  todayKey as calendarTodayKey,
+} from "@/lib/calendar/dates";
 
 const DURATION_OPTIONS = [15, 30, 45, 60];
-
-function dateValue(offsetDays = 1) {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
-
-function keyForDate(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate()
-  ).padStart(2, "0")}`;
-}
-
-function monthGrid(monthDate) {
-  const first = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-  const start = new Date(first);
-  start.setDate(first.getDate() - first.getDay());
-  start.setHours(0, 0, 0, 0);
-  return Array.from({ length: 42 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    return d;
-  });
-}
-
-function monthTitle(date) {
-  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-}
 
 function resolveInitialDoctorId(doctors, initialDoctorId) {
   if (initialDoctorId && doctors.some((d) => d.id === initialDoctorId)) return initialDoctorId;
@@ -67,11 +42,11 @@ export function AppointmentBookingForm({
     return d;
   });
   const bookingDates = useMemo(() => monthGrid(monthDate), [monthDate]);
-  const todayKey = dateValue(0);
+  const todayKey = calendarTodayKey();
   const [doctorId, setDoctorId] = useState(() => resolveInitialDoctorId(doctors, initialDoctorId));
   const [patientId, setPatientId] = useState(patients[0]?.id ?? "");
   const [patientName, setPatientName] = useState("");
-  const [date, setDate] = useState(dateValue());
+  const [date, setDate] = useState(dateKeyOffset(1));
   const [durationMinutes, setDurationMinutes] = useState(15);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [slots, setSlots] = useState([]);
@@ -84,7 +59,13 @@ export function AppointmentBookingForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [lastCreatedAppointment, setLastCreatedAppointment] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  const showPaymentStep =
+    mode === "patient" &&
+    lastCreatedAppointment &&
+    Number(lastCreatedAppointment.feeAmountCents ?? 0) > 0;
 
   const selectedDoctor = useMemo(
     () => doctors.find((d) => d.id === doctorId),
@@ -100,10 +81,10 @@ export function AppointmentBookingForm({
     setDatesLoading(true);
     Promise.all(
       bookingDates.map((day) =>
-        fetch(`/api/doctors/${doctorId}/slots?date=${keyForDate(day)}&duration=${durationMinutes}`, { cache: "no-store" })
+        fetch(`/api/doctors/${doctorId}/slots?date=${dateKey(day)}&duration=${durationMinutes}`, { cache: "no-store" })
           .then((r) => r.json())
-          .then((data) => [keyForDate(day), data?.slots?.length ?? 0])
-          .catch(() => [keyForDate(day), 0])
+          .then((data) => [dateKey(day), data?.slots?.length ?? 0])
+          .catch(() => [dateKey(day), 0])
       )
     )
       .then((entries) => {
@@ -161,6 +142,7 @@ export function AppointmentBookingForm({
     if (pending) return;
     setError("");
     setSaved(false);
+    setLastCreatedAppointment(null);
     const nextErrors = {};
 
     if (mode === "admin" && patients.length === 0 && !patientName.trim()) {
@@ -203,17 +185,29 @@ export function AppointmentBookingForm({
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
         setError(data.error || "Could not create appointment.");
-        toast.error(data.error || "Could not create appointment.");
+        if (data.fieldErrors) setFieldErrors(data.fieldErrors);
         return;
       }
-      setSaved(true);
-      toast.success(mode === "admin" ? "Appointment created." : "Appointment request sent.");
-      setNotes("");
-      if (usesSlotPicker) {
-        setSelectedSlot("");
-        setRefreshKey((key) => key + 1);
+      const created = data.appointment;
+      const needsPayment =
+        mode === "patient" && Number(created?.feeAmountCents ?? 0) > 0;
+
+      if (needsPayment) {
+        setLastCreatedAppointment({
+          id: created.id,
+          feeAmountCents: created.feeAmountCents,
+        });
+        toast.success("Appointment request sent.");
+      } else {
+        setSaved(true);
+        toast.success(mode === "admin" ? "Appointment created." : "Appointment request sent.");
+        setNotes("");
+        if (usesSlotPicker) {
+          setSelectedSlot("");
+          setRefreshKey((key) => key + 1);
+        }
+        router.refresh();
       }
-      router.refresh();
     } finally {
       setPending(false);
     }
@@ -340,156 +334,21 @@ export function AppointmentBookingForm({
       </div>
 
       {usesSlotPicker ? (
-        <div className="mt-5 rounded-2xl bg-surface-low p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-foreground/45 inline-flex items-center gap-1.5">
-                <CalendarPlus size={14} /> Choose a date
-              </p>
-              <p className="text-xs text-foreground/50 mt-1">
-                Slot availability is calculated for a {durationMinutes}-minute visit.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setMonthDate((current) => {
-                    const next = new Date(current);
-                    next.setMonth(current.getMonth() - 1);
-                    return next;
-                  })
-                }
-                className="w-9 h-9 rounded-lg border border-primary/[0.08] text-foreground/65 hover:bg-surface-lowest inline-flex items-center justify-center"
-                aria-label="Previous month"
-              >
-                <ChevronLeft size={17} />
-              </button>
-              <div className="min-w-32 text-center text-sm font-bold font-manrope">
-                {monthTitle(monthDate)}
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setMonthDate((current) => {
-                    const next = new Date(current);
-                    next.setMonth(current.getMonth() + 1);
-                    return next;
-                  })
-                }
-                className="w-9 h-9 rounded-lg border border-primary/[0.08] text-foreground/65 hover:bg-surface-lowest inline-flex items-center justify-center"
-                aria-label="Next month"
-              >
-                <ChevronRight size={17} />
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-foreground/55">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden />
-              Available
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-primary" aria-hidden />
-              Selected
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-foreground/25" aria-hidden />
-              Unavailable
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-foreground/15" aria-hidden />
-              Past
-            </span>
-          </div>
-
-          <div className="mt-4 grid grid-cols-7 rounded-2xl overflow-hidden border border-primary/[0.06] bg-surface-lowest">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-              <div
-                key={day}
-                className="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-widest text-foreground/45 bg-surface-low"
-              >
-                {day}
-              </div>
-            ))}
-            {bookingDates.map((day) => {
-              const value = keyForDate(day);
-              const count = dateAvailability[value] ?? 0;
-              const available = count > 0;
-              const active = date === value;
-              const isPast = value < todayKey;
-              const isOtherMonth = day.getMonth() !== monthDate.getMonth();
-              const disabled = !doctorId || datesLoading || isPast || !available;
-              const marker = active ? "SELECTED" : isPast ? "PAST" : available ? "AVAILABLE" : "UNAVAILABLE";
-              return (
-                <motion.button
-                  key={value}
-                  type="button"
-                  whileTap={disabled ? undefined : { scale: 0.97 }}
-                  disabled={disabled}
-                  onClick={() => {
-                    setDate(value);
-                    setSelectedSlot("");
-                    setFieldErrors((prev) => ({ ...prev, selectedSlot: "" }));
-                  }}
-                  className={`min-h-[4.6rem] border-t border-r border-primary/[0.06] p-2 text-left transition-colors disabled:cursor-not-allowed ${
-                    active
-                      ? "bg-primary/[0.08] ring-2 ring-inset ring-primary/30"
-                      : "hover:bg-surface-low"
-                  } ${isOtherMonth ? "bg-surface-lowest/35 text-foreground/35" : "bg-surface-lowest"} ${
-                    disabled ? "opacity-55 hover:bg-surface-lowest" : ""
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold font-manrope ${
-                        active ? "text-primary" : "text-foreground/75"
-                      }`}
-                    >
-                      {day.getDate()}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold ${
-                        marker === "SELECTED"
-                          ? "text-primary"
-                          : marker === "AVAILABLE"
-                            ? "text-emerald-700"
-                            : marker === "PAST"
-                              ? "text-foreground/35"
-                              : "text-foreground/45"
-                      }`}
-                    >
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          marker === "SELECTED"
-                            ? "bg-primary"
-                            : marker === "AVAILABLE"
-                              ? "bg-emerald-500"
-                              : marker === "PAST"
-                                ? "bg-foreground/15"
-                                : "bg-foreground/25"
-                        }`}
-                        aria-hidden
-                      />
-                      {datesLoading
-                        ? "Checking"
-                        : marker === "PAST"
-                          ? "Past"
-                          : marker === "AVAILABLE"
-                            ? `${count} slot${count === 1 ? "" : "s"}`
-                            : marker === "SELECTED"
-                              ? `${count} slot${count === 1 ? "" : "s"}`
-                              : doctorId
-                                ? "Unavailable"
-                                : "Pick doctor"}
-                    </span>
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
+        <BookingDatePicker
+          monthDate={monthDate}
+          setMonthDate={setMonthDate}
+          date={date}
+          durationMinutes={durationMinutes}
+          doctorId={doctorId}
+          dateAvailability={dateAvailability}
+          datesLoading={datesLoading}
+          todayKey={todayKey}
+          onDateChange={(value) => {
+            setDate(value);
+            setSelectedSlot("");
+            setFieldErrors((prev) => ({ ...prev, selectedSlot: "" }));
+          }}
+        />
       ) : null}
 
       {usesSlotPicker ? (
@@ -586,17 +445,34 @@ export function AppointmentBookingForm({
         />
       </label>
 
+      {showPaymentStep ? (
+        <PaymentChoiceStep
+          appointmentId={lastCreatedAppointment.id}
+          feeAmountCents={lastCreatedAppointment.feeAmountCents}
+          onComplete={() => {
+            setLastCreatedAppointment(null);
+            setSaved(true);
+            setNotes("");
+            if (usesSlotPicker) {
+              setSelectedSlot("");
+              setRefreshKey((key) => key + 1);
+            }
+            router.refresh();
+          }}
+        />
+      ) : null}
+
       <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3">
         <motion.button
           type="submit"
           whileTap={{ scale: 0.98 }}
-          disabled={pending || (usesSlotPicker && !selectedSlot)}
+          disabled={pending || showPaymentStep || (usesSlotPicker && !selectedSlot)}
           className="h-11 px-5 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm shadow-primary/20 hover:bg-primary-container transition-colors disabled:opacity-50"
         >
           {pending ? "Saving..." : mode === "admin" ? "Create appointment" : "Send request"}
         </motion.button>
         <AnimatePresence mode="wait">
-          {saved ? (
+          {saved && !showPaymentStep ? (
             <motion.p
               key="saved"
               initial={{ opacity: 0, y: 6 }}

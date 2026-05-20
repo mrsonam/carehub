@@ -32,6 +32,17 @@ enum NotificationType {
   APPOINTMENT_REMINDER_1H
 }
 
+enum PaymentMethod {
+  PAY_AT_COUNTER
+  STRIPE
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  WAIVED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -46,6 +57,19 @@ model User {
   /// Professional / display title (e.g. MD, Clinical Lead)
   title String?
   bio   String?
+  specialty  String?
+  department String?
+  avatarUrl  String?
+
+  dateOfBirth DateTime?
+  gender      String?
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
 
   /// Set when a doctor (or other role) finishes the profile wizard
   profileCompletedAt DateTime?
@@ -107,6 +131,13 @@ model Appointment {
   /// Legacy notes field retained for existing rows until data is migrated.
   notes        String?
 
+  feeAmountCents           Int             @default(0)
+  paymentMethod            PaymentMethod?
+  paymentStatus            PaymentStatus   @default(UNPAID)
+  paidAt                   DateTime?
+  stripeCheckoutSessionId  String?         @unique
+  stripePaymentIntentId    String?         @unique
+
   patient User? @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: SetNull)
   doctor  User? @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: SetNull)
 
@@ -155,5 +186,14 @@ model DoctorAvailabilityOverride {
   updatedAt DateTime @updatedAt
 
   @@index([doctorId, date])
+}
+
+model ClinicFeeSchedule {
+  id         String   @id @default("default")
+  fee15Cents Int      @default(5000)
+  fee30Cents Int      @default(8000)
+  fee45Cents Int      @default(11000)
+  fee60Cents Int      @default(14000)
+  updatedAt  DateTime @updatedAt
 }
 

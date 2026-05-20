@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatApptTime, formatRelative } from "@/lib/dashboard-format";
+import { UserAvatar } from "@/app/components/profile/UserAvatar";
 
 const FILTERS = [
   { id: "all", label: "All" },
@@ -29,7 +29,7 @@ const SORTS = [
 ];
 
 /**
- * @param {{ doctors: { id: string; name: string; title: string | null; bioPreview: string | null; image: string; hasRules: boolean; visitCountWithYou: number; upcomingWithYou: number; lastVisitAt: string | null }[] }} props
+ * @param {{ doctors: { id: string; name: string; title: string | null; bioPreview: string | null; avatarUrl: string | null; hasRules: boolean; visitCountWithYou: number; upcomingWithYou: number; lastVisitAt: string | null }[] }} props
  */
 export function PatientDoctorsDirectory({ doctors }) {
   const [query, setQuery] = useState("");
@@ -140,15 +140,12 @@ export function PatientDoctorsDirectory({ doctors }) {
               className="panel p-0 overflow-hidden flex flex-col hover:shadow-md transition-shadow"
             >
               <div className="flex gap-4 p-5">
-                <div className="relative w-20 h-24 shrink-0 rounded-xl overflow-hidden bg-surface-high ring-1 ring-primary/[0.06]">
-                  <Image
-                    src={d.image}
-                    alt={`${d.name}, clinician`}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                  />
-                </div>
+                <UserAvatar
+                  name={d.name}
+                  avatarUrl={d.avatarUrl}
+                  className="w-20 h-24 shrink-0 rounded-xl ring-1 ring-primary/[0.06]"
+                  textClassName="text-base"
+                />
                 <div className="min-w-0 flex-1 flex flex-col">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold font-manrope text-base leading-tight truncate">{d.name}</p>

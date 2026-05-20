@@ -134,12 +134,6 @@ export default async function AdminDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-surface-lowest transition-colors"
-          >
-            Export
-          </button>
           <Link
             href="/admin/appointments"
             className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm shadow-primary/20 hover:bg-primary-container transition-colors"
@@ -150,7 +144,7 @@ export default async function AdminDashboard() {
         </div>
       </header>
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Metric icon={CalendarDays} label="Total appointments" value={stats.totalAppointments} hint={`${stats.todayCount} today`} />
         <Metric icon={CheckCircle2} label="Completed" value={stats.completedCount} hint={`${completionRate}% completion`} />
         <Metric icon={CalendarClock} label="Upcoming" value={stats.upcomingCount} hint="scheduled ahead" />
