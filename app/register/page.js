@@ -21,6 +21,7 @@ export default function RegisterPage() {
   return (
     <Suspense fallback={<RegisterFallback />}>
       <RegisterForm />
+      
     </Suspense>
   );
 }
