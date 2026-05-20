@@ -13,6 +13,26 @@ const ROLE_ROOT = {
   PATIENT: "/patient",
 };
 
+const GUEST_ONLY_PATHS = ["/login", "/register"];
+
+function isGuestOnlyPath(pathname) {
+  return GUEST_ONLY_PATHS.includes(pathname);
+}
+
+/** @param {NonNullable<Awaited<ReturnType<typeof verifySessionToken>>>} session */
+function redirectUrlForSession(session, req) {
+  const home = ROLE_HOME[session.role] ?? "/dashboard";
+  const { mustChangePassword, needsProfile, role } = session;
+
+  if (mustChangePassword) {
+    return new URL("/dashboard/setup/password", req.url);
+  }
+  if (needsProfile && role === "DOCTOR") {
+    return new URL("/dashboard/setup/profile", req.url);
+  }
+  return new URL(home, req.url);
+}
+
 function isUnderRoleArea(pathname, base) {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
@@ -41,6 +61,15 @@ function legacyDashboardRedirect(pathname) {
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
+
+  if (isGuestOnlyPath(pathname)) {
+    const token = req.cookies.get(getSessionCookieName())?.value;
+    if (!token) return NextResponse.next();
+    const session = await verifySessionToken(token).catch(() => null);
+    if (!session) return NextResponse.next();
+    return NextResponse.redirect(redirectUrlForSession(session, req));
+  }
+
   if (!isProtectedPath(pathname)) {
     return NextResponse.next();
   }
@@ -121,5 +150,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/doctor/:path*", "/patient/:path*"],
+  matcher: ["/login", "/register", "/dashboard/:path*", "/admin/:path*", "/doctor/:path*", "/patient/:path*"],
 };

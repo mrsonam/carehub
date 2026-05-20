@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Phone, Stethoscope, FileText, Sparkles, Check } from "lucide-react";
 import { useToast } from "@/app/components/toast/ToastProvider";
+import { FormAlert, FORM_ERROR_KEY } from "@/app/components/forms/FormField";
+import { errorsFromApiResponse, hasFieldErrors, validateRequired } from "@/lib/forms/validate";
 
 const steps = [
   { id: 1, label: "Role" },
@@ -34,9 +36,11 @@ export default function SetupProfileWizard({ userName, userEmail }) {
     setErrors({});
     if (pending) return;
     const nextErrors = {};
-    if (!title.trim()) nextErrors.title = "Title is required.";
-    if (!phone.trim()) nextErrors.phone = "Phone is required.";
-    if (Object.keys(nextErrors).length > 0) {
+    const titleError = validateRequired(title, "Title is required.");
+    const phoneError = validateRequired(phone, "Phone is required.");
+    if (titleError) nextErrors.title = titleError;
+    if (phoneError) nextErrors.phone = phoneError;
+    if (hasFieldErrors(nextErrors)) {
       setErrors(nextErrors);
       return;
     }
@@ -49,7 +53,7 @@ export default function SetupProfileWizard({ userName, userEmail }) {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not save profile.");
+        setErrors(errorsFromApiResponse(data, "Could not save profile."));
         return;
       }
       toast.success("Profile saved.");
@@ -214,6 +218,7 @@ export default function SetupProfileWizard({ userName, userEmail }) {
               <p className="text-xs text-foreground/50 -mt-1">
                 A short line for the directory — special interests, languages, or care philosophy.
               </p>
+              <FormAlert message={errors[FORM_ERROR_KEY]} />
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}

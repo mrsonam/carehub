@@ -12,6 +12,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { useToast } from "@/app/components/toast/ToastProvider";
+import { FormAlert } from "@/app/components/forms/FormField";
+import { FORM_ERROR_KEY } from "@/lib/forms/validate";
 import { CalendarShell } from "@/app/components/calendar/CalendarShell";
 import { displayDay, parseDateKey, todayKey } from "@/lib/calendar/dates";
 
@@ -183,7 +185,6 @@ function BlockFormModal({ modal, onClose, onDone }) {
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      toast.error("This availability block overlaps an existing one.");
       return;
     }
 
@@ -205,7 +206,7 @@ function BlockFormModal({ modal, onClose, onDone }) {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not save availability.");
+        setErrors({ [FORM_ERROR_KEY]: data.error || "Could not save availability." });
         return;
       }
       toast.success("Availability saved.");
@@ -226,7 +227,7 @@ function BlockFormModal({ modal, onClose, onDone }) {
       );
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not remove availability.");
+        setErrors({ [FORM_ERROR_KEY]: data.error || "Could not remove availability." });
         return;
       }
       toast.success("Availability removed.");
@@ -251,7 +252,8 @@ function BlockFormModal({ modal, onClose, onDone }) {
       subtitle={`${modal.type === "rule" ? "Weekly default" : "Date override"} · ${label}`}
       onClose={onClose}
     >
-      <form onSubmit={save} className="grid gap-5">
+      <form onSubmit={save} className="grid gap-5" noValidate>
+        <FormAlert message={errors[FORM_ERROR_KEY]} />
         <div className="grid grid-cols-2 gap-3">
           <label className="grid gap-1.5">
             <span className="text-xs font-semibold text-foreground/60">Start</span>
@@ -388,6 +390,7 @@ function PlannerMobilePanel({
   overrideBlocks,
   selectedRuleBlocks,
   pendingDay,
+  dayActionError,
   onAddOverride,
   onEditBlock,
   onMarkUnavailable,
@@ -460,6 +463,7 @@ function PlannerMobilePanel({
             {pendingDay === "clear" ? "Clearing" : "Use default"}
           </motion.button>
         </div>
+        <FormAlert message={dayActionError} />
       </div>
     </motion.div>
   );
@@ -499,6 +503,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
   const [selectedDate, setSelectedDate] = useState(today);
   const [modal, setModal] = useState(null);
   const [pendingDay, setPendingDay] = useState("");
+  const [dayActionError, setDayActionError] = useState("");
   const [inspectorTab, setInspectorTab] = useState("DAY");
 
   const rulesByWeekday = useMemo(
@@ -524,6 +529,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
 
   const markUnavailable = async () => {
     setPendingDay("unavailable");
+    setDayActionError("");
     try {
       const r = await fetch("/api/doctor/availability", {
         method: "POST",
@@ -535,7 +541,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
         refresh();
       } else {
         const data = await r.json().catch(() => ({}));
-        toast.error(data.error || "Could not update day.");
+        setDayActionError(data.error || "Could not update day.");
       }
     } finally {
       setPendingDay("");
@@ -544,6 +550,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
 
   const clearDayOverride = async () => {
     setPendingDay("clear");
+    setDayActionError("");
     try {
       const r = await fetch(`/api/doctor/availability?type=override-day&date=${selectedDate}`, {
         method: "DELETE",
@@ -553,7 +560,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
         refresh();
       } else {
         const data = await r.json().catch(() => ({}));
-        toast.error(data.error || "Could not clear override.");
+        setDayActionError(data.error || "Could not clear override.");
       }
     } finally {
       setPendingDay("");
@@ -703,6 +710,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
               overrideBlocks={overrideBlocks}
               selectedRuleBlocks={selectedRuleBlocks}
               pendingDay={pendingDay}
+              dayActionError={dayActionError}
               onAddOverride={() =>
                 setModal({
                   mode: "add",
@@ -835,6 +843,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
                         {pendingDay === "clear" ? "Clearing" : "Use default"}
                       </motion.button>
                     </div>
+                    <FormAlert message={dayActionError} />
                   </div>
                 </motion.div>
               ) : (

@@ -13,10 +13,12 @@ export function AppointmentPatientPayment({
   const toast = useToast();
   const router = useRouter();
   const [pending, setPending] = useState("");
+  const [error, setError] = useState("");
 
   const payNow = async () => {
     if (pending) return;
     setPending("checkout");
+    setError("");
     try {
       const r = await fetch("/api/payments/checkout", {
         method: "POST",
@@ -25,7 +27,7 @@ export function AppointmentPatientPayment({
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.url) {
-        toast.error(data.error || "Could not start checkout.");
+        setError(data.error || "Could not start checkout.");
         return;
       }
       window.location.href = data.url;
@@ -45,7 +47,7 @@ export function AppointmentPatientPayment({
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not save payment choice.");
+        setError(data.error || "Could not save payment choice.");
         return;
       }
       toast.success("You can pay at the front desk before your visit.");
@@ -87,6 +89,11 @@ export function AppointmentPatientPayment({
       {paymentMethod === "PAY_AT_COUNTER" ? (
         <p className="text-sm text-foreground/60">
           You chose to pay at the front desk. Payment is still due before your visit.
+        </p>
+      ) : null}
+      {error ? (
+        <p className="text-xs text-red-600" role="alert">
+          {error}
         </p>
       ) : null}
     </motion.div>

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { Users, ShieldCheck, Phone, Search, X } from "lucide-react";
+import { UserAvatar } from "@/app/components/profile/UserAvatar";
 
 export default function DoctorsPageClient({ doctors }) {
   const [search, setSearch] = useState("");
@@ -115,8 +115,13 @@ export default function DoctorsPageClient({ doctors }) {
                 className="group flex flex-col tonal-card rounded-[2rem] p-4"
               >
                 <div className="aspect-[4/5] relative rounded-[2rem] overflow-hidden bg-surface-high mb-8 shadow-sm group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-500">
-                  <Image src={doctor.image} alt={doctor.name} fill className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <UserAvatar
+                    name={doctor.name}
+                    avatarUrl={doctor.avatarUrl}
+                    className="absolute inset-0 w-full h-full rounded-[2rem]"
+                    textClassName="text-4xl sm:text-5xl"
+                  />
+                  <motion.div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" aria-hidden />
                 </div>
 
                 <div className="flex flex-col flex-grow">

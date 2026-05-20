@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/app/components/toast/ToastProvider";
+import { FormAlert, FORM_ERROR_KEY } from "@/app/components/forms/FormField";
+import { errorsFromApiResponse, hasFieldErrors, validateEmail, validateRequired } from "@/lib/forms/validate";
 
 export default function CreateStaffForm() {
   const router = useRouter();
@@ -12,20 +14,23 @@ export default function CreateStaffForm() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("DOCTOR");
   const [errors, setErrors] = useState({});
+  const [emailWarning, setEmailWarning] = useState("");
   const [pending, setPending] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
     if (pending) return;
-    const nextErrors = {};
     const normalizedEmail = email.trim();
-    if (!name.trim()) nextErrors.name = "Full name is required.";
-    if (!normalizedEmail) nextErrors.email = "Email is required.";
-    else if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) nextErrors.email = "Enter a valid email.";
+    const nextErrors = {};
+    const nameError = validateRequired(name, "Full name is required.");
+    const emailError = validateEmail(normalizedEmail);
+    if (nameError) nextErrors.name = nameError;
+    if (emailError) nextErrors.email = emailError;
     if (!password) nextErrors.password = "Initial password is required.";
     else if (password.length < 8) nextErrors.password = "Use at least 8 characters.";
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    setEmailWarning("");
+    if (hasFieldErrors(nextErrors)) return;
     setPending(true);
     try {
       const r = await fetch("/api/admin/users", {
@@ -35,17 +40,18 @@ export default function CreateStaffForm() {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not create account.");
+        const apiErrors = errorsFromApiResponse(data, "Could not create account.");
+        if (data?.error?.toLowerCase().includes("email")) {
+          apiErrors.email = data.error;
+          delete apiErrors[FORM_ERROR_KEY];
+        }
+        setErrors(apiErrors);
         return;
       }
       const roleLabel = data.user?.role === "ADMIN" ? "Admin" : "Doctor";
+      toast.success(`Created ${data.user?.name} (${roleLabel}).`);
       if (data.emailWarning) {
-        toast.success(`Created ${data.user?.name} (${roleLabel}).`);
-        toast.error(`Welcome email could not be sent: ${data.emailWarning}`);
-      } else {
-        toast.success(
-          `Created ${data.user?.name} (${roleLabel}). A welcome email with the temporary password and next steps was sent.`
-        );
+        setEmailWarning(`Welcome email could not be sent: ${data.emailWarning}`);
       }
       setName("");
       setEmail("");
@@ -61,7 +67,15 @@ export default function CreateStaffForm() {
     <form
       onSubmit={submit}
       className="panel p-6 flex flex-col gap-5 max-w-lg"
+      noValidate
     >
+      <FormAlert message={errors[FORM_ERROR_KEY]} />
+      {emailWarning ? (
+        <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2" role="status">
+          {emailWarning}
+        </p>
+      ) : null}
+
       <div>
         <h2 className="text-lg font-bold font-manrope">Create staff account</h2>
         <p className="text-sm text-foreground/55 mt-1">

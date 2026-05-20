@@ -11,6 +11,8 @@ import {
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 import { autoCloseExpiredAppointments } from "@/lib/appointment-lifecycle";
 import { prisma } from "@/lib/prisma";
+import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
+import { UserAvatar } from "@/app/components/profile/UserAvatar";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
 import { AppointmentStatusBadge } from "../../components/appointments/AppointmentStatusBadge";
 import {
@@ -19,7 +21,6 @@ import {
   formatApptTime,
   formatTimeOnly,
   greetingForHour,
-  initialsFromName,
 } from "@/lib/dashboard-format";
 import { DoctorVolumeChart } from "../../components/doctor/DoctorVolumeChart";
 import { ConsultationControls } from "../../components/doctor/ConsultationControls";
@@ -147,6 +148,24 @@ async function loadDoctorDashboard(user) {
     if (recentPatients.length >= 5) break;
   }
 
+  const recentPatientIds = [...new Set(recentPatients.map((a) => a.patientId).filter(Boolean))];
+  const portalAvatars =
+    recentPatientIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: recentPatientIds } },
+          select: { id: true, avatarUrl: true, updatedAt: true },
+        })
+      : [];
+  const avatarByPatientId = Object.fromEntries(
+    portalAvatars.map((u) => [u.id, avatarDisplayUrl(u.avatarUrl, u.updatedAt)])
+  );
+  const recentPatientsDisplay = recentPatients.map((a) => ({
+    patientName: a.patientName,
+    scheduledAt: a.scheduledAt,
+    updatedAt: a.updatedAt,
+    avatarUrl: a.patientId ? avatarByPatientId[a.patientId] ?? null : null,
+  }));
+
   const alertIds = new Set();
   const alerts = [];
 
@@ -189,7 +208,7 @@ async function loadDoctorDashboard(user) {
     todayList,
     upcomingList,
     weeks: weeks.map(({ label, count, highlight }) => ({ label, count, highlight })),
-    recentPatients,
+    recentPatients: recentPatientsDisplay,
     alerts,
     nextHref,
   };
@@ -301,9 +320,12 @@ export default async function DoctorDashboard() {
             <ul className="mt-4 divide-y divide-primary/[0.06]">
               {data.recentPatients.map((row) => (
                 <li key={row.patientName} className="flex items-center gap-4 py-3.5 text-sm first:pt-0 last:pb-0">
-                  <span className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-xs font-bold font-manrope">
-                    {initialsFromName(row.patientName)}
-                  </span>
+                  <UserAvatar
+                    name={row.patientName}
+                    avatarUrl={row.avatarUrl}
+                    className="w-9 h-9 rounded-full"
+                    textClassName="text-xs"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{row.patientName}</p>
                     <p className="text-xs text-foreground/50">Last touch {formatRelative(row.updatedAt)}</p>

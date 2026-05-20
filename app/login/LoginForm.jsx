@@ -5,18 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Activity, ArrowRight, Check, LayoutDashboard, Lock, Mail, Shield } from "lucide-react";
-import { useToast } from "@/app/components/toast/ToastProvider";
-
-const fieldClass = (hasError) =>
-  `w-full h-11 px-3.5 rounded-lg border text-sm transition-colors outline-none focus:ring-2 bg-surface-lowest ${
-    hasError
-      ? "border-red-400/80 bg-red-50/50 focus:ring-red-500/25 focus:border-red-400"
-      : "border-primary/[0.12] focus:border-primary/30 focus:ring-primary/15"
-  }`;
+import { FormAlert, formInputClass, FORM_ERROR_KEY } from "@/app/components/forms/FormField";
+import { errorsFromApiResponse, hasFieldErrors, validateEmail, validateRequired } from "@/lib/forms/validate";
 
 export default function LoginForm() {
   const router = useRouter();
-  const toast = useToast();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
 
@@ -32,13 +25,14 @@ export default function LoginForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const nextErrors = {};
     const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail) nextErrors.email = "Email is required.";
-    else if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) nextErrors.email = "Enter a valid email.";
-    if (!password) nextErrors.password = "Password is required.";
+    const nextErrors = {};
+    const emailError = validateEmail(normalizedEmail);
+    const passwordError = validateRequired(password, "Password is required.");
+    if (emailError) nextErrors.email = emailError;
+    if (passwordError) nextErrors.password = passwordError;
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (hasFieldErrors(nextErrors)) return;
 
     setLoading(true);
     fetch("/api/auth/login", {
@@ -49,14 +43,16 @@ export default function LoginForm() {
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) {
-          throw new Error(data?.error || "Login failed.");
+          setErrors(errorsFromApiResponse(data, "Login failed."));
+          return;
         }
+        setErrors({});
         window.dispatchEvent(new Event("auth-changed"));
         router.push(next);
         router.refresh();
       })
-      .catch((err) => {
-        toast.error(err instanceof Error ? err.message : "Login failed.");
+      .catch(() => {
+        setErrors({ [FORM_ERROR_KEY]: "Could not sign in. Check your connection and try again." });
       })
       .finally(() => setLoading(false));
   };
@@ -111,7 +107,9 @@ export default function LoginForm() {
               </li>
             </ul>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
+              <FormAlert message={errors[FORM_ERROR_KEY]} />
+
               <div>
                 <label htmlFor="login-email" className="block text-xs font-bold uppercase tracking-wider text-foreground/45 mb-1.5">
                   Email
@@ -127,7 +125,7 @@ export default function LoginForm() {
                     type="email"
                     autoComplete="email"
                     placeholder="you@example.com"
-                    className={`${fieldClass(Boolean(errors.email))} pl-10`}
+                    className={`${formInputClass(Boolean(errors.email), "w-full h-11 px-3.5 pl-10 rounded-lg")}`}
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
@@ -154,7 +152,7 @@ export default function LoginForm() {
                     type="password"
                     autoComplete="current-password"
                     placeholder="Your password"
-                    className={`${fieldClass(Boolean(errors.password))} pl-10`}
+                    className={`${formInputClass(Boolean(errors.password), "w-full h-11 px-3.5 pl-10 rounded-lg")}`}
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -166,13 +164,7 @@ export default function LoginForm() {
                 {errors.password ? (
                   <p className="mt-1.5 text-xs text-red-600">{errors.password}</p>
                 ) : (
-                  <p className="mt-1.5 text-[11px] text-foreground/45">
-                    First time here?{" "}
-                    <Link href={registerHref} className="font-semibold text-primary hover:text-primary-container">
-                      Create an account
-                    </Link>{" "}
-                    as a patient.
-                  </p>
+                  <></>
                 )}
               </div>
 

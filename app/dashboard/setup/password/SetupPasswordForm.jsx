@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, ArrowRight, ShieldCheck } from "lucide-react";
 import { useToast } from "@/app/components/toast/ToastProvider";
+import { FormAlert, FORM_ERROR_KEY } from "@/app/components/forms/FormField";
+import { errorsFromApiResponse, hasFieldErrors } from "@/lib/forms/validate";
 
 const container = {
   hidden: { opacity: 0 },
@@ -55,7 +57,7 @@ export default function SetupPasswordForm({ userRole }) {
     if (!confirm) nextErrors.confirm = "Please confirm your new password.";
     else if (newPassword !== confirm) nextErrors.confirm = "New passwords do not match.";
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) {
+    if (hasFieldErrors(nextErrors)) {
       return;
     }
     if (pending) return;
@@ -68,7 +70,12 @@ export default function SetupPasswordForm({ userRole }) {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not update password.");
+        const apiErrors = errorsFromApiResponse(data, "Could not update password.");
+        if (data?.error?.toLowerCase().includes("current")) {
+          apiErrors.currentPassword = data.error;
+          delete apiErrors[FORM_ERROR_KEY];
+        }
+        setErrors(apiErrors);
         return;
       }
       toast.success("Password updated.");
@@ -107,7 +114,9 @@ export default function SetupPasswordForm({ userRole }) {
         </p>
       </div>
 
-      <form onSubmit={submit} className="panel p-6 sm:p-8">
+      <form onSubmit={submit} className="panel p-6 sm:p-8" noValidate>
+        <FormAlert message={errors[FORM_ERROR_KEY]} className="mb-5" />
+
         <motion.div
           className="flex flex-col gap-5"
           variants={container}

@@ -1,11 +1,92 @@
 "use client";
 
-import { Activity, Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Activity, Mail, Phone } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { dashboardHomeForRole } from "@/lib/dashboard-routes";
+
+const GUEST_FOOTER_LINKS = [
+  { label: "Sign in", href: "/login" },
+  { label: "Create account", href: "/register" },
+  { label: "Contact", href: "/contact" },
+];
+
+/** @param {{ role: string }} user */
+function footerLinksForUser(user) {
+  const links = [{ label: "Dashboard", href: dashboardHomeForRole(user.role) }];
+
+  if (user.role === "PATIENT") {
+    links.push({ label: "My appointments", href: "/patient/appointments" });
+    links.push({ label: "Find a doctor", href: "/patient/doctors" });
+  } else if (user.role === "DOCTOR") {
+    links.push({ label: "Schedule", href: "/doctor/schedule" });
+  } else if (user.role === "ADMIN") {
+    links.push({ label: "Appointments", href: "/admin/appointments" });
+  }
+
+  links.push({ label: "Contact", href: "/contact" });
+  return links;
+}
+
+const linkClassName =
+  "font-medium text-foreground/60 hover:text-primary transition-colors duration-200 cursor-pointer rounded px-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30";
 
 export default function Footer() {
+  const router = useRouter();
   const pathname = usePathname();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      setLoading(true);
+      fetch("/api/auth/me", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return;
+          setUser(data?.user ?? null);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setUser(null);
+        })
+        .finally(() => {
+          if (cancelled) return;
+          setLoading(false);
+        });
+    };
+
+    const onAuthChanged = () => load();
+    window.addEventListener("auth-changed", onAuthChanged);
+    window.addEventListener("focus", onAuthChanged);
+    load();
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("auth-changed", onAuthChanged);
+      window.removeEventListener("focus", onAuthChanged);
+    };
+  }, [pathname]);
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setUser(null);
+      window.dispatchEvent(new Event("auth-changed"));
+      router.push("/");
+      router.refresh();
+    }
+  }, [router]);
+
+  const footerLinks = useMemo(() => {
+    if (loading) return [{ label: "Contact", href: "/contact" }];
+    if (user) return footerLinksForUser(user);
+    return GUEST_FOOTER_LINKS;
+  }, [loading, user]);
+
   const hideForAppShell =
     pathname != null &&
     /^(\/dashboard|\/admin|\/doctor|\/patient)(\/|$)/.test(pathname);
@@ -14,98 +95,96 @@ export default function Footer() {
     return null;
   }
 
+  const year = new Date().getFullYear();
+  const showSignOut = !loading && user;
+
   return (
-    <footer className="bg-surface-low pt-16 sm:pt-24 pb-12 px-4 sm:px-8 lg:px-20 border-t border-outline-variant/10">
-      <div className="container mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          <div className="flex flex-col gap-6">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white transition-transform group-hover:scale-110">
-                <Activity size={18} />
-              </div>
-              <span className="text-xl font-bold font-manrope tracking-tight text-primary">CareHub</span>
+    <footer className="mt-auto border-t border-primary/[0.08] bg-surface-lowest">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10 py-10 sm:py-12">
+        <div className="flex flex-col gap-8 sm:gap-10 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-sm">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 group cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              <span className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white transition-colors group-hover:bg-primary-container">
+                <Activity size={18} aria-hidden />
+              </span>
+              <span className="text-lg font-bold font-manrope tracking-tight text-primary">
+                CareHub
+              </span>
             </Link>
-            <p className="text-sm text-foreground/50 leading-relaxed">
-              Serving our community with reliable, clinical care. Your health journey, simplified.
+            <p className="mt-3 text-sm text-foreground/55 leading-relaxed">
+              Book appointments and manage your care with your clinic, in one place.
             </p>
-            <div className="flex flex-col gap-3">
-              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
-                <MapPin size={16} className="text-primary" />
-                <span>123 Medical Drive, Health Plaza</span>
-              </Link>
-              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
-                <Phone size={16} className="text-primary" />
-                <span>(02) 5555 1234</span>
-              </Link>
-              <Link href="/contact" className="flex items-center gap-3 text-foreground/60 text-sm hover:text-primary transition-colors">
-                <Mail size={16} className="text-primary" />
-                <span>contact@carehubclinic.com</span>
-              </Link>
-            </div>
           </div>
-          
-          <div>
-            <h4 className="text-sm font-bold uppercase tracking-widest text-foreground/40 mb-6">Clinic Information</h4>
-            <ul className="space-y-4">
+
+          <div className="flex flex-col gap-4 sm:items-end lg:text-right">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-foreground/40">
+              Get in touch
+            </p>
+            <ul className="space-y-2.5">
               <li>
-                <div className="flex items-start gap-2 text-sm text-foreground/60">
-                  <Clock size={16} className="text-primary mt-1" />
-                  <div>
-                    <p className="font-bold">Operating Hours</p>
-                    <p>Mon - Fri: 8:00 AM - 6:00 PM</p>
-                    <p>Sat: 9:00 AM - 2:00 PM</p>
-                  </div>
-                </div>
+                <a
+                  href="tel:+61255551234"
+                  className="inline-flex items-center gap-2.5 text-sm text-foreground/70 hover:text-primary transition-colors duration-200 cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                >
+                  <Phone size={16} className="text-primary shrink-0" aria-hidden />
+                  (02) 5555 1234
+                </a>
               </li>
               <li>
-                <Link href="/doctors" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">About Our Doctors</Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Clinic History</Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">Get in Touch</Link>
+                <a
+                  href="mailto:contact@carehubclinic.com"
+                  className="inline-flex items-center gap-2.5 text-sm text-foreground/70 hover:text-primary transition-colors duration-200 cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                >
+                  <Mail size={16} className="text-primary shrink-0" aria-hidden />
+                  contact@carehubclinic.com
+                </a>
               </li>
             </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-sm font-bold uppercase tracking-widest text-foreground/40 mb-6">Medical Services</h4>
-            <ul className="space-y-4">
-              {[
-                { name: "General Practice", href: "/services" },
-                { name: "Pediatrics", href: "/services" },
-                { name: "Chronic Care", href: "/services" },
-                { name: "Vaccinations", href: "/services" },
-                { name: "All Services", href: "/services" }
-              ].map((link) => (
-                <li key={link.name}>
-                  <Link href={link.href} className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">{link.name}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-sm font-bold uppercase tracking-widest text-foreground/40 mb-6">Patient Portal</h4>
-            <ul className="space-y-4">
-              {["Sign In", "Book Appointment", "Privacy Policy", "Terms of Service"].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors cursor-pointer">{link}</Link>
-                </li>
-              ))}
-            </ul>
+            <p className="text-xs text-foreground/45 leading-relaxed max-w-xs">
+              Mon–Fri 8:00–18:00 · Sat 9:00–14:00
+              <br />
+              123 Medical Drive, Health Plaza
+            </p>
           </div>
         </div>
-        
-        <div className="pt-8 border-t border-outline-variant/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-foreground/40">
-            © {new Date().getFullYear()} CareHub Clinic. An MVP for academic practice.
+
+        <div className="mt-8 pt-6 border-t border-primary/[0.06] flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-foreground/45">
+            © {year} CareHub Clinic. All rights reserved.
           </p>
-          <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-foreground/30">
-            <span>Powered by Supabase</span>
-            <span>Built with Next.js</span>
-          </div>
+          <nav aria-label="Footer">
+            <ul className="flex flex-wrap items-center gap-x-1 gap-y-2 text-sm">
+              {footerLinks.map((link, i) => (
+                <li key={link.href} className="flex items-center">
+                  {i > 0 ? (
+                    <span className="mx-2 text-foreground/25 select-none" aria-hidden>
+                      ·
+                    </span>
+                  ) : null}
+                  <Link href={link.href} className={linkClassName}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              {showSignOut ? (
+                <li className="flex items-center">
+                  <span className="mx-2 text-foreground/25 select-none" aria-hidden>
+                    ·
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className={linkClassName}
+                  >
+                    Sign out
+                  </button>
+                </li>
+              ) : null}
+            </ul>
+          </nav>
         </div>
       </div>
     </footer>

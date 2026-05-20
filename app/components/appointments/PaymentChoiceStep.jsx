@@ -9,6 +9,7 @@ import { useToast } from "@/app/components/toast/ToastProvider";
 export function PaymentChoiceStep({ appointmentId, feeAmountCents, onComplete }) {
   const toast = useToast();
   const [pending, setPending] = useState("");
+  const [error, setError] = useState("");
 
   const payNow = async () => {
     if (pending) return;
@@ -21,7 +22,7 @@ export function PaymentChoiceStep({ appointmentId, feeAmountCents, onComplete })
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.url) {
-        toast.error(data.error || "Could not start checkout.");
+        setError(data.error || "Could not start checkout.");
         return;
       }
       window.location.href = data.url;
@@ -33,6 +34,7 @@ export function PaymentChoiceStep({ appointmentId, feeAmountCents, onComplete })
   const payAtCounter = async () => {
     if (pending) return;
     setPending("counter");
+    setError("");
     try {
       const r = await fetch(`/api/appointments/${appointmentId}/payment`, {
         method: "PATCH",
@@ -41,7 +43,7 @@ export function PaymentChoiceStep({ appointmentId, feeAmountCents, onComplete })
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not save payment choice.");
+        setError(data.error || "Could not save payment choice.");
         return;
       }
       toast.success("You can pay at the front desk before your visit.");
@@ -95,6 +97,11 @@ export function PaymentChoiceStep({ appointmentId, feeAmountCents, onComplete })
           {pending === "counter" ? "Saving..." : "Pay at counter"}
         </motion.button>
       </motion.div>
+      {error ? (
+        <p className="mt-3 text-xs text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
     </motion.div>
   );
 }

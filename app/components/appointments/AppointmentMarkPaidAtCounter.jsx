@@ -10,6 +10,7 @@ export function AppointmentMarkPaidAtCounter({ appointmentId }) {
   const router = useRouter();
   const toast = useToast();
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
 
   const markPaid = async () => {
     if (pending) return;
@@ -22,7 +23,7 @@ export function AppointmentMarkPaidAtCounter({ appointmentId }) {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not mark as paid.");
+        setError(data.error || "Could not mark as paid.");
         return;
       }
       toast.success("Marked as paid at counter.");
@@ -33,15 +34,22 @@ export function AppointmentMarkPaidAtCounter({ appointmentId }) {
   };
 
   return (
-    <motion.button
-      type="button"
-      whileTap={{ scale: 0.98 }}
-      disabled={pending}
-      onClick={markPaid}
-      className="mt-3 h-10 px-4 rounded-lg border border-primary/[0.12] bg-surface-lowest text-sm font-semibold text-foreground/80 hover:bg-surface-low transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2 w-fit"
-    >
-      <Banknote size={15} />
-      {pending ? "Saving..." : "Mark paid at counter"}
-    </motion.button>
+    <motion.div className="mt-3 flex flex-col gap-1.5 w-fit">
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.98 }}
+        disabled={pending}
+        onClick={markPaid}
+        className="h-10 px-4 rounded-lg border border-primary/[0.12] bg-surface-lowest text-sm font-semibold text-foreground/80 hover:bg-surface-low transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+      >
+        <Banknote size={15} />
+        {pending ? "Saving..." : "Mark paid at counter"}
+      </motion.button>
+      {error ? (
+        <p className="text-xs text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </motion.div>
   );
 }

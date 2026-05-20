@@ -44,6 +44,23 @@ Online payments use [Stripe Checkout](https://stripe.com/docs/payments/checkout)
 
 After payment, the app confirms with Stripe on redirect (`/api/payments/confirm`). The webhook should still run in production; if status stays **Unpaid** locally, `stripe listen` is usually not running or `STRIPE_WEBHOOK_SECRET` does not match the CLI secret.
 
+## Supabase setup (profile photos)
+
+Doctors and patients can upload profile photos from `/doctor/profile` and `/patient/profile`.
+
+1. Create a [Supabase](https://supabase.com) project.
+2. In **Storage**, create a public bucket named `avatars` (or run `node scripts/ensure-avatar-bucket.mjs` — the app will also try to create it on first upload).
+3. Add to `.env.local` (see `.env.example`):
+
+   ```bash
+   SUPABASE_URL=https://xxxx.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=eyJ...
+   ```
+
+4. Uploads run server-side via the service role key. Do not expose the service role key to the browser.
+
+Without these variables, profile fields still save; photo upload returns a “not configured” message.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

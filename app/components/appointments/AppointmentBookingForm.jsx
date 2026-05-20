@@ -185,7 +185,7 @@ export function AppointmentBookingForm({
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
         setError(data.error || "Could not create appointment.");
-        toast.error(data.error || "Could not create appointment.");
+        if (data.fieldErrors) setFieldErrors(data.fieldErrors);
         return;
       }
       const created = data.appointment;

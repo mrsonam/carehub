@@ -117,7 +117,7 @@ export default function DoctorScheduleCalendar({ appointments = [] }) {
                         key={appt.id}
                         href={`/doctor/appointments/${appt.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="block rounded-lg border border-primary/[0.08] bg-surface-low px-2 py-1.5 transition-colors hover:bg-surface-lowest"
+                        className="block rounded-lg border border-primary/[0.08] bg-surface-low px-2 py-1.5"
                       >
                         <div className="flex items-start gap-2 min-w-0">
                           <span

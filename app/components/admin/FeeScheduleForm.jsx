@@ -5,6 +5,8 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, BarChart3, Clock, CreditCard, Info, Receipt, Store } from "lucide-react";
 import { useToast } from "@/app/components/toast/ToastProvider";
+import { FormAlert, FORM_ERROR_KEY } from "@/app/components/forms/FormField";
+import { errorsFromApiResponse, hasFieldErrors } from "@/lib/forms/validate";
 
 const EASE_OUT = [0.23, 1, 0.32, 1];
 
@@ -54,6 +56,7 @@ export default function FeeScheduleForm({ initialSchedule = null }) {
     formSnapshot(scheduleToForm(initialSchedule))
   );
   const [errors, setErrors] = useState({});
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     if (initialSchedule) return;
@@ -63,7 +66,7 @@ export default function FeeScheduleForm({ initialSchedule = null }) {
         const r = await fetch("/api/settings/fees");
         const data = await r.json().catch(() => ({}));
         if (!r.ok || !data.schedule) {
-          if (!cancelled) toast.error(data.error || "Could not load fee schedule.");
+          if (!cancelled) setLoadError(data.error || "Could not load fee schedule.");
           return;
         }
         if (!cancelled) {
@@ -100,7 +103,7 @@ export default function FeeScheduleForm({ initialSchedule = null }) {
       }
     }
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (hasFieldErrors(nextErrors)) return;
 
     setPending(true);
     try {
@@ -111,7 +114,7 @@ export default function FeeScheduleForm({ initialSchedule = null }) {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(data.error || "Could not save fee schedule.");
+        setErrors(errorsFromApiResponse(data, "Could not save fee schedule."));
         return;
       }
       if (data.schedule) {
@@ -131,7 +134,9 @@ export default function FeeScheduleForm({ initialSchedule = null }) {
         onSubmit={submit}
         className="panel p-6 lg:p-7 lg:col-span-2 flex flex-col gap-6 max-w-none"
         aria-busy={loading}
+        noValidate
       >
+        <FormAlert message={loadError || errors[FORM_ERROR_KEY]} />
         <motion.div
           className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
           initial={reduceMotion ? false : { opacity: 0, y: 6 }}

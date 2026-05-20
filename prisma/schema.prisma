@@ -57,6 +57,19 @@ model User {
   /// Professional / display title (e.g. MD, Clinical Lead)
   title String?
   bio   String?
+  specialty  String?
+  department String?
+  avatarUrl  String?
+
+  dateOfBirth DateTime?
+  gender      String?
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
 
   /// Set when a doctor (or other role) finishes the profile wizard
   profileCompletedAt DateTime?

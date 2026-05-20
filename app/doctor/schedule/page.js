@@ -109,8 +109,10 @@ export default async function DoctorSchedulePage({ searchParams }) {
               <li
                 key={appt.id}
                 id={appt.id}
-                className={`grid gap-4 py-5 first:pt-0 last:pb-0 rounded-xl border border-transparent px-2 ${
-                  focus === appt.id ? "bg-primary/[0.06] border-primary/20" : "hover:bg-surface-lowest/70 hover:border-primary/[0.08]"
+                className={`grid gap-4 py-5 first:pt-0 last:pb-0 rounded-xl border px-2 ${
+                  focus === appt.id
+                    ? "bg-primary/[0.06] border-primary/20"
+                    : "border-transparent"
                 }`}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
