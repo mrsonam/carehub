@@ -1,125 +1,203 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { Activity, ArrowRight, Check, LayoutDashboard, Lock, Mail, Shield } from "lucide-react";
+import { FormAlert, formInputClass, FORM_ERROR_KEY } from "@/app/components/forms/FormField";
+import { errorsFromApiResponse, hasFieldErrors, validateEmail, validateRequired } from "@/lib/forms/validate";
 
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
 
+  const registerHref = useMemo(() => {
+    const n = searchParams.get("next");
+    return n ? `/register?next=${encodeURIComponent(n)}` : "/register";
+  }, [searchParams]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setMessage("");
+    const normalizedEmail = email.trim().toLowerCase();
+    const nextErrors = {};
+    const emailError = validateEmail(normalizedEmail);
+    const passwordError = validateRequired(password, "Password is required.");
+    if (emailError) nextErrors.email = emailError;
+    if (passwordError) nextErrors.password = passwordError;
+    setErrors(nextErrors);
+    if (hasFieldErrors(nextErrors)) return;
+
     setLoading(true);
     fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: normalizedEmail, password }),
     })
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) {
-          throw new Error(data?.error || "Login failed.");
+          setErrors(errorsFromApiResponse(data, "Login failed."));
+          return;
         }
+        setErrors({});
         window.dispatchEvent(new Event("auth-changed"));
         router.push(next);
         router.refresh();
       })
-      .catch((err) => {
-        setMessage(err instanceof Error ? err.message : "Login failed.");
+      .catch(() => {
+        setErrors({ [FORM_ERROR_KEY]: "Could not sign in. Check your connection and try again." });
       })
       .finally(() => setLoading(false));
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface">
-      <main className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="grid w-full max-w-5xl grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-10">
-          {/* Form column */}
-          <div className="mx-auto w-full max-w-md rounded-xl bg-surface-lowest p-8 shadow-lg lg:mx-0">
-            <div className="mb-6 text-center">
-              <span className="mb-3 inline-flex rounded-full bg-primary/5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
-                CareHub
-              </span>
-              <h1 className="mb-2 text-3xl font-extrabold font-manrope text-foreground">Sign In</h1>
-              <p className="text-sm text-foreground/60">Welcome back to Healthcare Booking</p>
+    <div className="min-h-[calc(100vh-8rem)] flex flex-col bg-surface relative overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_480px_at_85%_-10%,rgba(0,72,141,0.11),transparent_55%),radial-gradient(700px_400px_at_0%_25%,rgba(0,106,106,0.08),transparent_50%)]"
+        aria-hidden
+      />
+
+      <main className="relative flex-1 flex items-center justify-center px-4 py-12 sm:py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}
+          className="w-full max-w-[440px]"
+        >
+          <div className="rounded-[1.35rem] border border-primary/[0.1] bg-surface-lowest/95 shadow-[0_4px_24px_-8px_rgba(0,72,141,0.12),0_1px_2px_rgba(16,24,40,0.04)] backdrop-blur-sm px-6 py-8 sm:px-9 sm:py-10">
+            <div className="flex flex-col items-center text-center">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 rounded-xl border border-primary/[0.1] bg-primary/5 px-3 py-2 text-primary hover:bg-primary/10 transition-colors mb-5"
+              >
+                <span className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white shadow-sm shadow-primary/25">
+                  <Activity size={18} aria-hidden />
+                </span>
+                <span className="font-bold font-manrope text-lg tracking-tight">CareHub</span>
+              </Link>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/45">Welcome back</p>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold font-manrope tracking-tight text-foreground">
+                Sign in
+              </h1>
+              <p className="mt-2 text-sm text-foreground/55 leading-relaxed max-w-sm">
+                Use the email and password for your patient, doctor, or admin account. We will take you to
+                the right dashboard after sign-in.
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-foreground/80">Email</span>
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="w-full rounded-lg border border-outline-variant/40 bg-surface-lowest px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </label>
+            <ul className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-[11px] font-semibold text-foreground/50">
+              <li className="inline-flex items-center gap-1.5">
+                <Shield size={12} className="text-primary shrink-0" aria-hidden />
+                Secure session
+              </li>
+              <li className="inline-flex items-center gap-1.5">
+                <LayoutDashboard size={12} className="text-secondary shrink-0" aria-hidden />
+                Role-aware home
+              </li>
+              <li className="inline-flex items-center gap-1.5">
+                <Check size={12} className="text-emerald-600 shrink-0" aria-hidden />
+                Built for care teams
+              </li>
+            </ul>
 
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-foreground/80">Password</span>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="w-full rounded-lg border border-outline-variant/40 bg-surface-lowest px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </label>
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
+              <FormAlert message={errors[FORM_ERROR_KEY]} />
+
+              <div>
+                <label htmlFor="login-email" className="block text-xs font-bold uppercase tracking-wider text-foreground/45 mb-1.5">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/35 pointer-events-none"
+                    aria-hidden
+                  />
+                  <input
+                    id="login-email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    className={`${formInputClass(Boolean(errors.email), "w-full h-11 px-3.5 pl-10 rounded-lg")}`}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrors((prev) => ({ ...prev, email: "" }));
+                    }}
+                    required
+                  />
+                </div>
+                {errors.email ? <p className="mt-1.5 text-xs text-red-600">{errors.email}</p> : null}
+              </div>
+
+              <div>
+                <label htmlFor="login-password" className="block text-xs font-bold uppercase tracking-wider text-foreground/45 mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/35 pointer-events-none"
+                    aria-hidden
+                  />
+                  <input
+                    id="login-password"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="Your password"
+                    className={`${formInputClass(Boolean(errors.password), "w-full h-11 px-3.5 pl-10 rounded-lg")}`}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setErrors((prev) => ({ ...prev, password: "" }));
+                    }}
+                    required
+                  />
+                </div>
+                {errors.password ? (
+                  <p className="mt-1.5 text-xs text-red-600">{errors.password}</p>
+                ) : (
+                  <></>
+                )}
+              </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-primary px-4 py-3 font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
+                className="group w-full h-12 rounded-xl bg-primary text-white text-sm font-semibold shadow-md shadow-primary/20 hover:bg-primary-container transition-colors disabled:opacity-55 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? (
+                  "Signing in…"
+                ) : (
+                  <>
+                    Sign in
+                    <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+                  </>
+                )}
               </button>
             </form>
 
-            {message && <p className="mt-4 text-center text-sm text-red-600">{message}</p>}
+            <p className="mt-6 text-center text-xs text-foreground/50 leading-relaxed">
+              Staff accounts are created by your clinic administrator. If you were invited, use the email
+              from that invite.
+            </p>
 
-            <p className="mt-5 text-center text-sm text-foreground/70">
-              Don’t have an account?{" "}
-              <Link
-                href="/register"
-                className="font-semibold text-primary transition hover:text-primary-container"
-              >
-                Register
+            <p className="mt-5 text-center text-sm text-foreground/60">
+              New to CareHub?{" "}
+              <Link href={registerHref} className="font-semibold text-primary hover:text-primary-container transition-colors">
+                Register as a patient
               </Link>
             </p>
           </div>
-
-          {/* Image column (desktop only) */}
-          <div className="hidden lg:flex">
-            <div className="w-full rounded-xl bg-primary/5 p-6 shadow-lg">
-              <div className="relative aspect-square overflow-hidden rounded-lg bg-surface-lowest">
-                <img
-                  src="/clinic-office.png"
-                  alt="Healthcare illustration"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <div className="mt-4 text-left">
-                <p className="text-sm font-bold text-foreground/80">Trusted, digital-first care</p>
-                <p className="mt-1 text-sm text-foreground/60">
-                  Secure login and appointment access in seconds.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        </motion.div>
       </main>
     </div>
   );
 }
-

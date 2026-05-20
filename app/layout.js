@@ -2,6 +2,8 @@ import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { ToastProvider } from "./components/toast/ToastProvider";
+import ChatWidget from "./components/ChatWidget";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -24,9 +26,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`h-full ${manrope.variable} ${inter.variable}`}>
       <body className="min-h-full flex flex-col selection:bg-primary/10 selection:text-primary font-inter">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <ToastProvider>
+          <Navbar />
+          <main className="flex-1 min-w-0 w-full">{children}</main>
+          <Footer />
+          <ChatWidget />
+        </ToastProvider>
       </body>
     </html>
   );

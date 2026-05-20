@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { cookies } from "next/headers";
-import { getSessionCookieName, signSessionToken } from "@/lib/auth";
+import { setSessionFromUser } from "@/lib/session-cookie";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,21 +29,20 @@ export async function POST(req) {
       name,
       email,
       passwordHash,
-      role: "PATIENT", // registration is patient-only
+      role: "PATIENT",
+      mustChangePassword: false,
     },
-    select: { id: true, role: true, email: true, name: true },
+    select: {
+      id: true,
+      role: true,
+      email: true,
+      name: true,
+      mustChangePassword: true,
+      profileCompletedAt: true,
+    },
   });
 
-  const token = await signSessionToken({ userId: user.id, role: user.role });
-  const cookieStore = await cookies();
-  cookieStore.set(getSessionCookieName(), token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  await setSessionFromUser(user);
 
   return Response.json({ ok: true, user });
 }
-

@@ -11,7 +11,7 @@ import {
 
 export default function AboutPage() {
   return (
-    <div className="bg-surface pt-20 pb-40 px-20">
+    <div className="bg-surface pt-20 pb-24 sm:pb-40 px-4 sm:px-8 lg:px-20">
       <div>
         <div className="container mx-auto">
           {/* Hero Section */}
@@ -43,7 +43,7 @@ export default function AboutPage() {
           </div>
 
           {/* Story & Image Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mb-32">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 lg:gap-20 items-center mb-32">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -78,7 +78,7 @@ export default function AboutPage() {
                 </p>
               </div>
               
-              <div className="pt-8 border-t border-outline-variant/10 grid grid-cols-2 gap-8">
+              <div className="pt-8 border-t border-outline-variant/10 grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
                 <div>
                   <p className="text-3xl font-black font-manrope text-primary tracking-tight">3-5</p>
                   <p className="text-sm font-bold text-foreground/40 uppercase tracking-widest mt-1">Resident Doctors</p>

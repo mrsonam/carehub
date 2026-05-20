@@ -74,3 +74,55 @@ a, button {
   transform: translateY(-8px);
   box-shadow: 0 20px 40px rgba(0, 72, 141, 0.06);
 }
+
+/* Static panel — same tonal family as .tonal-card but no hover motion.
+   Intended for admin/product surfaces where content must not jump. */
+.panel {
+  background: var(--surface-lowest);
+  border-radius: 0.875rem;
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 6px 24px -12px rgba(0, 72, 141, 0.06);
+}
+
+/* Very soft hairline that lives tonally inside the surface family,
+   not as a contrasty outline against the background. */
+.hairline {
+  border-color: rgba(0, 72, 141, 0.06);
+}
+
+/* Horizontal scroll for 7-column week/month grids on narrow viewports */
+.scroll-calendar {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-inline: -0.25rem;
+  padding-inline: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .scroll-calendar {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+.scroll-calendar-inner {
+  min-width: 20rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .scroll-calendar-inner {
+    min-width: 0;
+  }
+}
+
+.scroll-calendar-inner--month {
+  min-width: 36rem;
+}
+
+@media (min-width: 1024px) {
+  .scroll-calendar-inner--month {
+    min-width: 0;
+  }
+}
