@@ -38,9 +38,11 @@ Online payments use [Stripe Checkout](https://stripe.com/docs/payments/checkout)
    stripe listen --forward-to localhost:3000/api/payments/webhook
    ```
 
-   The CLI prints a webhook signing secret (`whsec_...`). Set that value as `STRIPE_WEBHOOK_SECRET` in `.env.local` and restart the dev server.
+   The CLI prints a webhook signing secret (`whsec_...`). Set that value as `STRIPE_WEBHOOK_SECRET` in `.env` and restart the dev server. Use the secret from **`stripe listen`**, not the Dashboard webhook secret, while testing locally.
 
 4. Use Stripe [test cards](https://stripe.com/docs/testing#cards) (e.g. `4242424242424242`) when completing Checkout during development.
+
+After payment, the app confirms with Stripe on redirect (`/api/payments/confirm`). The webhook should still run in production; if status stays **Unpaid** locally, `stripe listen` is usually not running or `STRIPE_WEBHOOK_SECRET` does not match the CLI secret.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

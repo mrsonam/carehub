@@ -1,6 +1,6 @@
 import { getSessionUserOrErrorResponse } from "@/lib/auth-server";
-import { getAppBaseUrl } from "@/lib/app-url";
-import { createAppointmentCheckoutSession } from "@/lib/payments/stripe";
+import { getStripe } from "@/lib/payments/stripe";
+import { handleCheckoutCompleted } from "@/lib/payments/webhook";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -23,6 +23,8 @@ export async function POST(request) {
 
   const body = await request.json().catch(() => ({}));
   const appointmentId = body.appointmentId;
+  const sessionId = body.sessionId;
+
   if (!appointmentId) {
     return Response.json({ ok: false, error: "appointmentId is required." }, { status: 400 });
   }
@@ -36,28 +38,28 @@ export async function POST(request) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
-  if (appointment.paymentStatus !== "UNPAID") {
-    return Response.json({ ok: false, error: "Payment already recorded." }, { status: 400 });
+  if (appointment.paymentStatus === "PAID") {
+    return Response.json({ ok: true, appointment });
   }
 
-  if (appointment.feeAmountCents <= 0) {
-    return Response.json({ ok: false, error: "This appointment has no fee." }, { status: 400 });
+  const checkoutSessionId = sessionId || appointment.stripeCheckoutSessionId;
+  if (!checkoutSessionId) {
+    return Response.json(
+      { ok: false, error: "No checkout session found for this appointment." },
+      { status: 400 }
+    );
   }
 
-  const origin = getAppBaseUrl();
-  const successUrl = `${origin}/patient/appointments/${appointment.id}?paid=1&session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${origin}/patient/appointments/${appointment.id}?paid=0`;
+  const session = await getStripe().checkout.sessions.retrieve(checkoutSessionId);
+  if (session.payment_status !== "paid") {
+    return Response.json(
+      { ok: false, error: "Payment is not completed yet." },
+      { status: 400 }
+    );
+  }
 
-  const session = await createAppointmentCheckoutSession({
-    appointment,
-    successUrl,
-    cancelUrl,
-  });
+  await handleCheckoutCompleted(prisma, session);
 
-  await prisma.appointment.update({
-    where: { id: appointment.id },
-    data: { stripeCheckoutSessionId: session.id },
-  });
-
-  return Response.json({ ok: true, url: session.url });
+  const updated = await prisma.appointment.findUnique({ where: { id: appointmentId } });
+  return Response.json({ ok: true, appointment: updated });
 }
