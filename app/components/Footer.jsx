@@ -2,6 +2,7 @@
 
 import { Activity, Mail, Phone } from "lucide-react";
 import Link from "next/link";
+import { FacebookIcon, InstagramIcon } from "@/app/components/icons/SocialIcons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { dashboardHomeForRole } from "@/lib/dashboard-routes";
@@ -10,6 +11,20 @@ const GUEST_FOOTER_LINKS = [
   { label: "Sign in", href: "/login" },
   { label: "Create account", href: "/register" },
   { label: "Contact", href: "/contact" },
+  { label: "Privacy", href: "/privacy" },
+];
+
+const SOCIAL_LINKS = [
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/share/1P8gRYfkpD/?mibextid=wwXIfr",
+    Icon: FacebookIcon,
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/carehub8937?igsh=MTdjcmZ0dDlybGVndg==",
+    Icon: InstagramIcon,
+  },
 ];
 
 /** @param {{ role: string }} user */
@@ -26,6 +41,7 @@ function footerLinksForUser(user) {
   }
 
   links.push({ label: "Contact", href: "/contact" });
+  links.push({ label: "Privacy", href: "/privacy" });
   return links;
 }
 
@@ -82,7 +98,12 @@ export default function Footer() {
   }, [router]);
 
   const footerLinks = useMemo(() => {
-    if (loading) return [{ label: "Contact", href: "/contact" }];
+    if (loading) {
+      return [
+        { label: "Contact", href: "/contact" },
+        { label: "Privacy", href: "/privacy" },
+      ];
+    }
     if (user) return footerLinksForUser(user);
     return GUEST_FOOTER_LINKS;
   }, [loading, user]);
@@ -117,6 +138,26 @@ export default function Footer() {
             <p className="mt-3 text-sm text-foreground/55 leading-relaxed">
               Book appointments and manage your care with your clinic, in one place.
             </p>
+            <div className="mt-6">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-foreground/40 mb-3">
+                Follow us
+              </p>
+              <ul className="flex flex-wrap gap-2">
+                {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary/[0.12] bg-surface-low text-foreground/65 hover:border-primary/25 hover:text-primary transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    >
+                      <Icon />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           <div className="flex flex-col gap-4 sm:items-end lg:text-right">
