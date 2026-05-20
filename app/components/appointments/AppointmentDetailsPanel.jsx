@@ -1,6 +1,7 @@
 import { AppointmentStatusBadge } from "./AppointmentStatusBadge";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
 import { AppointmentPatientPayment } from "./AppointmentPatientPayment";
+import { AppointmentMarkPaidAtCounter } from "./AppointmentMarkPaidAtCounter";
 import { formatApptTime } from "@/lib/dashboard-format";
 import { formatMoney } from "@/lib/payments/fees.js";
 import { CalendarClock, CreditCard, FileText, Stethoscope, UserRound } from "lucide-react";
@@ -30,12 +31,21 @@ function EventRow({ label, value, done }) {
   );
 }
 
-export function AppointmentDetailsPanel({ appointment, canPayOnline = false }) {
+export function AppointmentDetailsPanel({
+  appointment,
+  canPayOnline = false,
+  canMarkPaid = false,
+  role,
+}) {
   const feeAmountCents = Number(appointment.feeAmountCents ?? 0);
   const showPayment =
     feeAmountCents > 0 || appointment.paymentStatus === "WAIVED";
   const showPayActions =
     canPayOnline &&
+    appointment.paymentStatus === "UNPAID" &&
+    feeAmountCents > 0;
+  const showMarkPaid =
+    canMarkPaid &&
     appointment.paymentStatus === "UNPAID" &&
     feeAmountCents > 0;
   const patientConcern = appointment.patientNotes ?? appointment.notes ?? "";
@@ -127,6 +137,8 @@ export function AppointmentDetailsPanel({ appointment, canPayOnline = false }) {
               appointmentId={appointment.id}
               paymentMethod={appointment.paymentMethod}
             />
+          ) : showMarkPaid ? (
+            <AppointmentMarkPaidAtCounter appointmentId={appointment.id} />
           ) : appointment.paymentMethod === "PAY_AT_COUNTER" &&
             appointment.paymentStatus === "UNPAID" &&
             feeAmountCents > 0 ? (

@@ -41,7 +41,7 @@ export default async function PatientAppointmentDetailsPage({ params }) {
       <Suspense fallback={null}>
         <PatientAppointmentPaidToast />
       </Suspense>
-      <AppointmentDetailsPanel appointment={appointment} canPayOnline />
+      <AppointmentDetailsPanel appointment={appointment} canPayOnline canMarkPaid={false} />
     </div>
   );
 }

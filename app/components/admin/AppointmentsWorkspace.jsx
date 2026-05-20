@@ -8,6 +8,7 @@ import {
   isWithinConsultationActionWindow,
 } from "@/lib/appointment-lifecycle";
 import { AppointmentStatusActions } from "../appointments/AppointmentStatusActions";
+import { PaymentStatusBadge } from "../appointments/PaymentStatusBadge";
 import { formatApptTime } from "@/lib/dashboard-format";
 
 const FILTERS = ["ALL", "REQUESTED", "CONFIRMED", "ONGOING", "COMPLETED", "NO_SHOW", "CANCELLED"];
@@ -234,6 +235,9 @@ export default function AppointmentsWorkspace({ appointments = [] }) {
                         <span className="inline-flex items-center rounded-full border border-primary/[0.08] bg-surface-low px-2.5 py-1 text-[10px] font-semibold text-foreground/55">
                           {appt.bucket === "PAST" ? "History" : "Upcoming"}
                         </span>
+                        {Number(appt.feeAmountCents ?? 0) > 0 ? (
+                          <PaymentStatusBadge paymentStatus={appt.paymentStatus} />
+                        ) : null}
                       </div>
                     </div>
                   </div>

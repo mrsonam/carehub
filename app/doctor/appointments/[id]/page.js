@@ -36,7 +36,7 @@ export default async function DoctorAppointmentDetailsPage({ params }) {
 
   return (
     <div className="max-w-5xl mx-auto w-full flex flex-col gap-6">
-      <AppointmentDetailsPanel appointment={appointment} />
+      <AppointmentDetailsPanel appointment={appointment} canMarkPaid={false} />
     </div>
   );
 }
