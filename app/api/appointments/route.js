@@ -126,9 +126,8 @@ export async function POST(request) {
     return Response.json({ ok: false, error: "Fee schedule is not configured." }, { status: 500 });
   }
 
-  const isAdminBooking = auth.user.role === "ADMIN";
-  const feeAmountCents = isAdminBooking ? 0 : feeCentsForDuration(durationMinutes, schedule);
-  const paymentStatus = isAdminBooking ? "WAIVED" : "UNPAID";
+  const feeAmountCents = feeCentsForDuration(durationMinutes, schedule);
+  const paymentStatus = "UNPAID";
 
   const appointment = await prisma.appointment.create({
     data: {

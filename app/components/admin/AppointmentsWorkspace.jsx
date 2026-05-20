@@ -7,6 +7,7 @@ import { CalendarClock, Eye, Search } from "lucide-react";
 import {
   isWithinConsultationActionWindow,
 } from "@/lib/appointment-lifecycle";
+import { requiresPaymentBeforeConsultation } from "@/lib/payments/consultation-gate";
 import { AppointmentStatusActions } from "../appointments/AppointmentStatusActions";
 import { PaymentStatusBadge } from "../appointments/PaymentStatusBadge";
 import { formatApptTime } from "@/lib/dashboard-format";
@@ -28,7 +29,11 @@ function actionsFor(appointment) {
   if (status === "REQUESTED") return ["CONFIRMED", "CANCELLED"];
   if (status === "CONFIRMED") {
     const inWindow = isWithinConsultationActionWindow(appointment);
-    return inWindow ? ["ONGOING", "NO_SHOW", "CANCELLED"] : ["CANCELLED"];
+    if (!inWindow) return ["CANCELLED"];
+    const startActions = requiresPaymentBeforeConsultation(appointment)
+      ? []
+      : ["ONGOING"];
+    return [...startActions, "NO_SHOW", "CANCELLED"];
   }
   if (status === "ONGOING") {
     return ["COMPLETED"];
