@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Hero from "./components/Hero";
 import Specialties from "./components/Specialties";
 import TrustSection from "./components/TrustSection";
+import BookAppointmentButton from "./components/booking/BookAppointmentButton";
 import { ArrowRight } from "lucide-react";
 
 export default function Home() {
@@ -36,10 +37,10 @@ export default function Home() {
                 Join thousands of patients who have simplified their healthcare management. Experience clinical coordination at your fingertips.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button className="w-full sm:w-auto bg-white text-primary px-10 py-5 rounded-2xl text-xl font-black shadow-2xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 group">
-                  Create Appoinment
+                <BookAppointmentButton className="w-full sm:w-auto bg-white text-primary px-10 py-5 rounded-2xl text-xl font-black shadow-2xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 group">
+                  Create Appointment
                   <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                </button>
+                </BookAppointmentButton>
                 <button className="w-full sm:w-auto bg-primary-container/20 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-2xl text-xl font-bold hover:bg-white/10 transition-all">
                   Register Facility
                 </button>

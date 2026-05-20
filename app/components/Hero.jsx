@@ -2,7 +2,9 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { Clock, ShieldCheck, CalendarCheck } from "lucide-react";
+import BookAppointmentButton from "@/app/components/booking/BookAppointmentButton";
 
 export default function Hero() {
   return (
@@ -28,12 +30,15 @@ export default function Hero() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <button className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-container hover:-translate-y-0.5 transition-all cursor-pointer">
+            <BookAppointmentButton className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-container hover:-translate-y-0.5 transition-all cursor-pointer">
               Book an Appointment
-            </button>
-            <button className="w-full sm:w-auto px-8 py-4 rounded-xl text-lg font-bold border border-outline-variant/30 hover:bg-surface-low transition-all cursor-pointer">
+            </BookAppointmentButton>
+            <Link
+              href="/about"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl text-lg font-bold border border-outline-variant/30 hover:bg-surface-low transition-all cursor-pointer text-center"
+            >
               About Our Clinic
-            </button>
+            </Link>
           </div>
           
           <div className="mt-12 flex items-center gap-6">

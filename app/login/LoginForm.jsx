@@ -7,11 +7,23 @@ import { motion } from "framer-motion";
 import { Activity, ArrowRight, Check, LayoutDashboard, Lock, Mail, Shield } from "lucide-react";
 import { FormAlert, formInputClass, FORM_ERROR_KEY } from "@/app/components/forms/FormField";
 import { errorsFromApiResponse, hasFieldErrors, validateEmail, validateRequired } from "@/lib/forms/validate";
+import {
+  BOOK_LOGIN_REASON,
+  PATIENT_BOOKING_PATH,
+  bookingPathForRole,
+} from "@/lib/booking-navigation";
 
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/dashboard";
+  const reason = searchParams.get("reason");
+  const isBookFlow = reason === BOOK_LOGIN_REASON;
+  const next =
+    searchParams.get("next") ||
+    (isBookFlow ? PATIENT_BOOKING_PATH : "/dashboard");
+  const bookSignInMessage = isBookFlow
+    ? "You need to be signed in to book an appointment."
+    : null;
 
   const registerHref = useMemo(() => {
     const n = searchParams.get("next");
@@ -48,7 +60,11 @@ export default function LoginForm() {
         }
         setErrors({});
         window.dispatchEvent(new Event("auth-changed"));
-        router.push(next);
+        const destination =
+          isBookFlow && data?.user?.role
+            ? bookingPathForRole(data.user.role)
+            : next;
+        router.push(destination);
         router.refresh();
       })
       .catch(() => {
@@ -108,6 +124,14 @@ export default function LoginForm() {
             </ul>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
+              {bookSignInMessage ? (
+                <p
+                  role="status"
+                  className="rounded-xl border border-primary/20 bg-primary/[0.06] px-4 py-3 text-sm text-foreground/75 leading-relaxed"
+                >
+                  {bookSignInMessage}
+                </p>
+              ) : null}
               <FormAlert message={errors[FORM_ERROR_KEY]} />
 
               <div>
