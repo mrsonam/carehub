@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppointmentDetailsPanel } from "../../../components/appointments/AppointmentDetailsPanel";
+import { PatientAppointmentPaidToast } from "../../../components/appointments/PatientAppointmentPaidToast";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +38,10 @@ export default async function PatientAppointmentDetailsPage({ params }) {
 
   return (
     <div className="max-w-5xl mx-auto w-full flex flex-col gap-6">
-      <AppointmentDetailsPanel appointment={appointment} />
+      <Suspense fallback={null}>
+        <PatientAppointmentPaidToast />
+      </Suspense>
+      <AppointmentDetailsPanel appointment={appointment} canPayOnline />
     </div>
   );
 }

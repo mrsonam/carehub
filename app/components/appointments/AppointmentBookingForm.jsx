@@ -14,6 +14,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useToast } from "@/app/components/toast/ToastProvider";
+import { PaymentChoiceStep } from "./PaymentChoiceStep";
 
 const DURATION_OPTIONS = [15, 30, 45, 60];
 
@@ -84,7 +85,13 @@ export function AppointmentBookingForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [lastCreatedAppointment, setLastCreatedAppointment] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  const showPaymentStep =
+    mode === "patient" &&
+    lastCreatedAppointment &&
+    Number(lastCreatedAppointment.feeAmountCents ?? 0) > 0;
 
   const selectedDoctor = useMemo(
     () => doctors.find((d) => d.id === doctorId),
@@ -161,6 +168,7 @@ export function AppointmentBookingForm({
     if (pending) return;
     setError("");
     setSaved(false);
+    setLastCreatedAppointment(null);
     const nextErrors = {};
 
     if (mode === "admin" && patients.length === 0 && !patientName.trim()) {
@@ -206,14 +214,26 @@ export function AppointmentBookingForm({
         toast.error(data.error || "Could not create appointment.");
         return;
       }
-      setSaved(true);
-      toast.success(mode === "admin" ? "Appointment created." : "Appointment request sent.");
-      setNotes("");
-      if (usesSlotPicker) {
-        setSelectedSlot("");
-        setRefreshKey((key) => key + 1);
+      const created = data.appointment;
+      const needsPayment =
+        mode === "patient" && Number(created?.feeAmountCents ?? 0) > 0;
+
+      if (needsPayment) {
+        setLastCreatedAppointment({
+          id: created.id,
+          feeAmountCents: created.feeAmountCents,
+        });
+        toast.success("Appointment request sent.");
+      } else {
+        setSaved(true);
+        toast.success(mode === "admin" ? "Appointment created." : "Appointment request sent.");
+        setNotes("");
+        if (usesSlotPicker) {
+          setSelectedSlot("");
+          setRefreshKey((key) => key + 1);
+        }
+        router.refresh();
       }
-      router.refresh();
     } finally {
       setPending(false);
     }
@@ -586,17 +606,34 @@ export function AppointmentBookingForm({
         />
       </label>
 
+      {showPaymentStep ? (
+        <PaymentChoiceStep
+          appointmentId={lastCreatedAppointment.id}
+          feeAmountCents={lastCreatedAppointment.feeAmountCents}
+          onComplete={() => {
+            setLastCreatedAppointment(null);
+            setSaved(true);
+            setNotes("");
+            if (usesSlotPicker) {
+              setSelectedSlot("");
+              setRefreshKey((key) => key + 1);
+            }
+            router.refresh();
+          }}
+        />
+      ) : null}
+
       <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3">
         <motion.button
           type="submit"
           whileTap={{ scale: 0.98 }}
-          disabled={pending || (usesSlotPicker && !selectedSlot)}
+          disabled={pending || showPaymentStep || (usesSlotPicker && !selectedSlot)}
           className="h-11 px-5 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm shadow-primary/20 hover:bg-primary-container transition-colors disabled:opacity-50"
         >
           {pending ? "Saving..." : mode === "admin" ? "Create appointment" : "Send request"}
         </motion.button>
         <AnimatePresence mode="wait">
-          {saved ? (
+          {saved && !showPaymentStep ? (
             <motion.p
               key="saved"
               initial={{ opacity: 0, y: 6 }}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarCheck2, CalendarClock, Eye, Search } from "lucide-react";
 import { AppointmentStatusActions } from "../appointments/AppointmentStatusActions";
+import { PaymentStatusBadge } from "../appointments/PaymentStatusBadge";
 
 const FILTERS = ["ALL", "REQUESTED", "CONFIRMED", "ONGOING", "COMPLETED", "NO_SHOW", "CANCELLED"];
 
@@ -223,6 +224,9 @@ export default function PatientAppointmentsWorkspace({
                         <span className="inline-flex items-center rounded-full border border-primary/[0.08] bg-surface-low px-2.5 py-1 text-[10px] font-semibold text-foreground/55">
                           {row.bucket === "PAST" ? "History" : "Upcoming"}
                         </span>
+                        {Number(row.feeAmountCents ?? 0) > 0 ? (
+                          <PaymentStatusBadge paymentStatus={row.paymentStatus} />
+                        ) : null}
                       </div>
                     </div>
                   </div>
