@@ -18,6 +18,30 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
+## Stripe setup (appointment payments)
+
+Online payments use [Stripe Checkout](https://stripe.com/docs/payments/checkout) in test mode for local development.
+
+1. Create a [Stripe account](https://dashboard.stripe.com/register) and open the [Developers → API keys](https://dashboard.stripe.com/test/apikeys) page.
+2. Copy your **test** keys (`pk_test_...` and `sk_test_...`) into `.env.local` (see `.env.example`):
+
+   ```bash
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+   PAYMENT_CURRENCY=aud
+   ```
+
+3. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli) and forward webhooks to your local app (with `npm run dev` running):
+
+   ```bash
+   stripe listen --forward-to localhost:3000/api/payments/webhook
+   ```
+
+   The CLI prints a webhook signing secret (`whsec_...`). Set that value as `STRIPE_WEBHOOK_SECRET` in `.env.local` and restart the dev server.
+
+4. Use Stripe [test cards](https://stripe.com/docs/testing#cards) (e.g. `4242424242424242`) when completing Checkout during development.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

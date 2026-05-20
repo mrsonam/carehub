@@ -91,6 +91,9 @@ Data Management
 Store user data (patients, doctors)
 Store appointment data
 Maintain relationships between users and appointments
+Appointment Payments
+Patients may pay online (Stripe Checkout) or choose pay at counter after booking
+Admins can record counter payments when patients pay in person
 
 5. Key Constraints
 Must be completed within 12 weeks
@@ -103,7 +106,6 @@ Must be web-based only (no mobile app)
 
 The following features must NOT be implemented:
 
-Payment integration
 Telehealth/video consultation
 Full medical records system (EMR)
 Prescription system
