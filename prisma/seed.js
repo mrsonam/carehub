@@ -17,6 +17,12 @@ function createPrismaClient() {
 const prisma = createPrismaClient();
 
 async function main() {
+  await prisma.clinicFeeSchedule.upsert({
+    where: { id: "default" },
+    create: { id: "default" },
+    update: {},
+  });
+
   const password = "admin123";
   const passwordHash = await bcrypt.hash(password, 12);
 
