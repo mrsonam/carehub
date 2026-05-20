@@ -1,4 +1,5 @@
 import { getSessionUserOrErrorResponse } from "@/lib/auth-server";
+import { feeCentsForDuration, ALLOWED_DURATIONS } from "@/lib/payments/fees.js";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications/notifications";
 
@@ -18,7 +19,6 @@ const STATUSES = new Set([
   "NO_SHOW",
 ]);
 const ACTIVE_STATUSES = ["REQUESTED", "CONFIRMED", "ONGOING"];
-const ALLOWED_DURATIONS = new Set([15, 30, 45, 60]);
 
 function rangesOverlap(startA, endA, startB, endB) {
   return startA < endB && startB < endA;
@@ -121,6 +121,15 @@ export async function POST(request) {
     }
   }
 
+  const schedule = await prisma.clinicFeeSchedule.findUnique({ where: { id: "default" } });
+  if (!schedule) {
+    return Response.json({ ok: false, error: "Fee schedule is not configured." }, { status: 500 });
+  }
+
+  const isAdminBooking = auth.user.role === "ADMIN";
+  const feeAmountCents = isAdminBooking ? 0 : feeCentsForDuration(durationMinutes, schedule);
+  const paymentStatus = isAdminBooking ? "WAIVED" : "UNPAID";
+
   const appointment = await prisma.appointment.create({
     data: {
       patientId: patient?.id ?? null,
@@ -131,6 +140,8 @@ export async function POST(request) {
       durationMinutes,
       patientNotes: cleanText(body.patientNotes ?? body.notes, null) || null,
       status,
+      feeAmountCents,
+      paymentStatus,
     },
   });
 
