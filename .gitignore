@@ -40,5 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-docs
+# User manual — generated locally (see docs/superpowers/specs/2026-05-20-user-manual-design.md)
+docs/user-manual/CareHub-User-Manual.md
+docs/user-manual/CareHub-User-Manual.docx
+docs/user-manual/assets/
+docs/user-manual/.cache/
 .impeccable
