@@ -26,13 +26,13 @@ export default async function DoctorSearchPage({ searchParams }) {
   const results = await searchDoctorResults(query, user);
 
   return (
-    <div className="max-w-4xl mx-auto w-full flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-extrabold font-manrope tracking-tight">Search</h1>
-        <p className="text-sm text-foreground/55 mt-1">
+    <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 sm:gap-10">
+      <header className="space-y-2">
+        <h1 className="text-2xl sm:text-3xl font-extrabold font-manrope tracking-tight">Search</h1>
+        <p className="text-sm sm:text-[15px] text-foreground/55 leading-relaxed max-w-2xl">
           Find patients and appointments on your schedule.
         </p>
-      </div>
+      </header>
       <DashboardSearchResults query={query} {...results} />
     </div>
   );
