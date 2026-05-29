@@ -6,10 +6,12 @@ import {
   Users,
 } from "lucide-react";
 import { requireAdminUser } from "@/lib/auth-server";
+import { readSearchQuery } from "@/lib/dashboard-search";
 import { prisma } from "@/lib/prisma";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
 import { AdminDoctorDirectory } from "../../components/admin/AdminDoctorDirectory";
 import { AdminDoctorJoinsChart } from "../../components/admin/AdminDoctorJoinsChart";
+import { formatMonthShort } from "@/lib/dashboard-format";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +25,7 @@ function buildMonthlyJoins(users) {
     const end = new Date(start);
     end.setMonth(end.getMonth() + 1);
     buckets.push({
-      label: start.toLocaleDateString(undefined, { month: "short" }),
+      label: formatMonthShort(start),
       count: 0,
       highlight: i === 0,
       startMs: start.getTime(),
@@ -42,8 +44,10 @@ function buildMonthlyJoins(users) {
   return buckets.map(({ label, count, highlight }) => ({ label, count, highlight }));
 }
 
-export default async function AdminDoctorsPage() {
+export default async function AdminDoctorsPage({ searchParams }) {
   await requireAdminUser("/admin/doctors");
+  const sp = await Promise.resolve(searchParams);
+  const initialQuery = readSearchQuery(sp?.q);
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -282,7 +286,7 @@ export default async function AdminDoctorsPage() {
           Search the roster, see upcoming load and availability rules, and jump to the last booking or Team.
         </p>
         <div className="mt-6">
-          <AdminDoctorDirectory doctors={doctors} />
+          <AdminDoctorDirectory doctors={doctors} initialQuery={initialQuery} />
         </div>
       </section>
 

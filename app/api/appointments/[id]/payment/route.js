@@ -1,15 +1,9 @@
 import { getSessionUserOrErrorResponse } from "@/lib/auth-server";
+import { patientOwnsAppointment } from "@/lib/booking/ownership";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function ownsAppointment(user, appointment) {
-  return (
-    appointment.patientId === user.id ||
-    appointment.patientName.toLowerCase() === user.name.toLowerCase()
-  );
-}
 
 export async function PATCH(request, { params }) {
   const auth = await getSessionUserOrErrorResponse();
@@ -44,7 +38,7 @@ export async function PATCH(request, { params }) {
     return Response.json({ ok: true, appointment: updated });
   }
 
-  if (auth.user.role !== "PATIENT" || !ownsAppointment(auth.user, appointment)) {
+  if (auth.user.role !== "PATIENT" || !patientOwnsAppointment(auth.user, appointment)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
   if (body.paymentMethod !== "PAY_AT_COUNTER") {

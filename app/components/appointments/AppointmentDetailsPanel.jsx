@@ -2,17 +2,9 @@ import { AppointmentStatusBadge } from "./AppointmentStatusBadge";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
 import { AppointmentPatientPayment } from "./AppointmentPatientPayment";
 import { AppointmentMarkPaidAtCounter } from "./AppointmentMarkPaidAtCounter";
-import { formatApptTime } from "@/lib/dashboard-format";
+import { formatApptTime, formatDateTimeMedium } from "@/lib/dashboard-format";
 import { formatMoney } from "@/lib/payments/fees.js";
 import { CalendarClock, CreditCard, FileText, Stethoscope, UserRound } from "lucide-react";
-
-function formatDateTime(value) {
-  if (!value) return "Not yet";
-  return new Date(value).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
 
 function EventRow({ label, value, done }) {
   return (
@@ -50,16 +42,16 @@ export function AppointmentDetailsPanel({
     feeAmountCents > 0;
   const patientConcern = appointment.patientNotes ?? appointment.notes ?? "";
   const timeline = [
-    { label: "Requested", value: formatDateTime(appointment.createdAt), done: true },
-    { label: "Confirmed", value: formatDateTime(appointment.confirmedAt), done: Boolean(appointment.confirmedAt) },
+    { label: "Requested", value: formatDateTimeMedium(appointment.createdAt), done: true },
+    { label: "Confirmed", value: formatDateTimeMedium(appointment.confirmedAt), done: Boolean(appointment.confirmedAt) },
     {
       label: "Consultation started",
-      value: formatDateTime(appointment.consultationStartedAt),
+      value: formatDateTimeMedium(appointment.consultationStartedAt),
       done: Boolean(appointment.consultationStartedAt),
     },
     {
       label: "Consultation ended",
-      value: formatDateTime(appointment.consultationEndedAt),
+      value: formatDateTimeMedium(appointment.consultationEndedAt),
       done: Boolean(appointment.consultationEndedAt),
     },
   ];

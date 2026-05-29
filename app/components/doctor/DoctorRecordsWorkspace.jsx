@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClipboardList, Eye, Search, UserRound } from "lucide-react";
@@ -19,10 +19,15 @@ const STATUS_HELP = {
   NO_SHOW: "Marked no-show",
 };
 
-export default function DoctorRecordsWorkspace({ records = [], focus }) {
-  const [query, setQuery] = useState("");
+export default function DoctorRecordsWorkspace({ records = [], focus, initialQuery = "" }) {
+  const [query, setQuery] = useState(initialQuery);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [scope, setScope] = useState("PAST");
+
+  useEffect(() => {
+    setQuery(initialQuery);
+    if (initialQuery) setScope("ALL");
+  }, [initialQuery]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();

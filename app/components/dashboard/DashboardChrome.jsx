@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Menu, Search, X } from "lucide-react";
+import { Activity, Menu, X } from "lucide-react";
+import { DashboardSearchBar } from "./DashboardSearchBar";
 import { DashboardSidebarContents } from "./DashboardSidebarContents";
 import { motion } from "framer-motion";
 import NotificationBell from "./NotificationBell";
@@ -101,17 +102,23 @@ export function DashboardChrome({ user, children }) {
               >
                 <Menu size={20} />
               </button>
-              <div className="flex-1 max-w-md relative min-w-0 hidden sm:block">
-                <Search
-                  size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 pointer-events-none"
-                />
-                <input
-                  type="search"
-                  placeholder={searchPh}
-                  className="w-full h-10 pl-9 pr-4 text-sm rounded-lg bg-surface-lowest border border-primary/[0.08] shadow-[0_1px_2px_rgba(16,24,40,0.04)] outline-none placeholder:text-foreground/40 focus:border-primary/20 focus:ring-2 focus:ring-primary/15"
-                />
-              </div>
+              <Link
+                href="/"
+                className="lg:hidden flex items-center gap-2 group min-w-0 shrink-0"
+                title="CareHub home"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white transition-transform group-hover:scale-105 shrink-0">
+                  <Activity size={18} />
+                </div>
+                <span className="text-lg font-bold font-manrope tracking-tight text-primary truncate">
+                  CareHub
+                </span>
+              </Link>
+              <DashboardSearchBar
+                role={user.role}
+                placeholder={searchPh}
+                className="flex-1 max-w-md min-w-0 hidden sm:block"
+              />
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -126,6 +133,9 @@ export function DashboardChrome({ user, children }) {
                 }
               />
             </div>
+          </div>
+          <div className="px-3 pb-3 sm:hidden">
+            <DashboardSearchBar role={user.role} placeholder={searchPh} />
           </div>
         </header>
 

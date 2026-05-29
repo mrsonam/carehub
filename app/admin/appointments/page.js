@@ -1,6 +1,7 @@
 import { UserRound } from "lucide-react";
 import { requireAdminUser } from "@/lib/auth-server";
-import { autoCloseExpiredAppointments } from "@/lib/appointment-lifecycle";
+import { autoCloseExpiredAppointments, isCalendarVisibleAppointment } from "@/lib/appointment-lifecycle";
+import { readSearchQuery } from "@/lib/dashboard-search";
 import { prisma } from "@/lib/prisma";
 import { AppointmentBookingForm } from "../../components/appointments/AppointmentBookingForm";
 import AppointmentsWorkspace from "../../components/admin/AppointmentsWorkspace";
@@ -8,8 +9,10 @@ import AdminAppointmentsCalendar from "../../components/admin/AdminAppointmentsC
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminAppointmentsPage() {
+export default async function AdminAppointmentsPage({ searchParams }) {
   await requireAdminUser("/admin/appointments");
+  const sp = await Promise.resolve(searchParams);
+  const initialQuery = readSearchQuery(sp?.q);
   await autoCloseExpiredAppointments(prisma);
 
   const [appointments, doctors, patients] = await Promise.all([
@@ -29,6 +32,17 @@ export default async function AdminAppointmentsPage() {
     }),
   ]);
 
+  const now = new Date();
+  const calendarAppointments = appointments.filter((a) => isCalendarVisibleAppointment(a, now));
+  const serialized = appointments.map((appt) => ({
+    ...appt,
+    scheduledAt: appt.scheduledAt.toISOString(),
+  }));
+  const serializedCalendar = calendarAppointments.map((appt) => ({
+    ...appt,
+    scheduledAt: appt.scheduledAt.toISOString(),
+  }));
+
   return (
     <div className="max-w-6xl mx-auto w-full flex flex-col gap-8">
       <div>
@@ -42,19 +56,9 @@ export default async function AdminAppointmentsPage() {
 
       <AppointmentBookingForm doctors={doctors} patients={patients} mode="admin" />
 
-      <AdminAppointmentsCalendar
-        appointments={appointments.map((appt) => ({
-          ...appt,
-          scheduledAt: appt.scheduledAt.toISOString(),
-        }))}
-      />
+      <AdminAppointmentsCalendar appointments={serializedCalendar} />
 
-      <AppointmentsWorkspace
-        appointments={appointments.map((appt) => ({
-          ...appt,
-          scheduledAt: appt.scheduledAt.toISOString(),
-        }))}
-      />
+      <AppointmentsWorkspace appointments={serialized} initialQuery={initialQuery} />
 
       {patients.length === 0 ? (
         <div className="panel p-5 flex gap-3 text-sm text-foreground/60">

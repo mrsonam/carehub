@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -13,7 +13,8 @@ import {
   SortAsc,
   Stethoscope,
 } from "lucide-react";
-import { formatApptTime, formatRelative } from "@/lib/dashboard-format";
+import { formatApptTime } from "@/lib/dashboard-format";
+import { RelativeTime } from "@/app/components/ui/RelativeTime";
 
 const SORTS = [
   { id: "name", label: "Name (A–Z)" },
@@ -24,9 +25,13 @@ const SORTS = [
 /**
  * @param {{ doctors: { id: string; name: string; email: string; phone: string | null; title: string | null; createdAt: string; profileCompleted: boolean; mustChangePassword: boolean; visitCount: number; ruleCount: number; upcomingCount: number; lastApptId: string | null; lastVisitAt: string | null }[] }} props
  */
-export function AdminDoctorDirectory({ doctors }) {
-  const [query, setQuery] = useState("");
+export function AdminDoctorDirectory({ doctors, initialQuery = "" }) {
+  const [query, setQuery] = useState(initialQuery);
   const [sort, setSort] = useState("name");
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -138,7 +143,7 @@ export function AdminDoctorDirectory({ doctors }) {
                     <span>
                       {d.visitCount} linked visit{d.visitCount === 1 ? "" : "s"}
                     </span>
-                    <span>Joined {formatRelative(d.createdAt)}</span>
+                    <span>Joined <RelativeTime from={d.createdAt} /></span>
                   </div>
                 </div>
               </div>

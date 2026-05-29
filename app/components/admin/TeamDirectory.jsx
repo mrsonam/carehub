@@ -8,12 +8,10 @@ function roleLabel(role) {
   return role === "ADMIN" ? "Admin" : "Doctor";
 }
 
+import { formatDateShort } from "@/lib/dashboard-format";
+
 function formatDate(value) {
-  return new Date(value).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  return formatDateShort(value);
 }
 
 export default function TeamDirectory({ staff = [] }) {

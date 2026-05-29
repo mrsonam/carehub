@@ -30,6 +30,7 @@ export function BookingDatePicker({
       <motion.button
         key={value}
         type="button"
+        data-testid={`booking-date-${value}`}
         whileTap={disabled ? undefined : { scale: 0.97 }}
         disabled={disabled}
         onClick={() => onDateChange(value)}

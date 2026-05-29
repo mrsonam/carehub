@@ -37,7 +37,10 @@ export default function Home() {
                 Join thousands of patients who have simplified their healthcare management. Experience clinical coordination at your fingertips.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <BookAppointmentButton className="w-full sm:w-auto bg-white text-primary px-10 py-5 rounded-2xl text-xl font-black shadow-2xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 group">
+                <BookAppointmentButton
+                  testId="book-appointment-cta-footer"
+                  className="w-full sm:w-auto bg-white text-primary px-10 py-5 rounded-2xl text-xl font-black shadow-2xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 group"
+                >
                   Create Appointment
                   <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </BookAppointmentButton>

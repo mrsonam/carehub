@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -12,7 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 import { AppointmentStatusBadge } from "../appointments/AppointmentStatusBadge";
-import { formatApptTime, formatRelative } from "@/lib/dashboard-format";
+import { formatApptTime } from "@/lib/dashboard-format";
+import { RelativeTime } from "@/app/components/ui/RelativeTime";
 import { UserAvatar } from "@/app/components/profile/UserAvatar";
 
 const SORTS = [
@@ -28,10 +29,14 @@ const FILTERS = [
   { id: "portal", label: "Portal accounts" },
 ];
 
-export function DoctorPatientDirectory({ patients }) {
-  const [query, setQuery] = useState("");
+export function DoctorPatientDirectory({ patients, initialQuery = "" }) {
+  const [query, setQuery] = useState(initialQuery);
   const [sort, setSort] = useState("recent");
   const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -159,7 +164,7 @@ export function DoctorPatientDirectory({ patients }) {
                       <UserRound size={12} className="opacity-70" aria-hidden />
                       {p.visitCount} visit{p.visitCount === 1 ? "" : "s"}
                     </span>
-                    <span>Last activity {formatRelative(p.lastTouch)}</span>
+                    <span>Last activity <RelativeTime from={p.lastTouch} /></span>
                   </div>
                   {p.notePreview ? (
                     <p className="mt-2 text-xs text-foreground/55 line-clamp-2 leading-relaxed">

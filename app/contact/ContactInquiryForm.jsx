@@ -82,7 +82,13 @@ export default function ContactInquiryForm({ className = "", idPrefix = "contact
   };
 
   return (
-    <form onSubmit={submit} className={`flex flex-col gap-5 ${className}`} aria-busy={pending} noValidate>
+    <form
+      data-testid="contact-form"
+      onSubmit={submit}
+      className={`flex flex-col gap-5 ${className}`}
+      aria-busy={pending}
+      noValidate
+    >
       <FormAlert message={errors[FORM_ERROR_KEY]} />
 
       <FormField
@@ -92,6 +98,7 @@ export default function ContactInquiryForm({ className = "", idPrefix = "contact
         labelClassName="text-sm font-semibold text-foreground"
       >
         <input
+          data-testid="contact-name"
           id={`${idPrefix}-name`}
           name="name"
           type="text"
@@ -115,6 +122,7 @@ export default function ContactInquiryForm({ className = "", idPrefix = "contact
         labelClassName="text-sm font-semibold text-foreground"
       >
         <input
+          data-testid="contact-email"
           id={`${idPrefix}-email`}
           name="email"
           type="email"
@@ -137,6 +145,7 @@ export default function ContactInquiryForm({ className = "", idPrefix = "contact
         labelClassName="text-sm font-semibold text-foreground"
       >
         <select
+          data-testid="contact-topic"
           id={`${idPrefix}-topic`}
           name="topic"
           value={topic}
@@ -158,6 +167,7 @@ export default function ContactInquiryForm({ className = "", idPrefix = "contact
         labelClassName="text-sm font-semibold text-foreground"
       >
         <textarea
+          data-testid="contact-message"
           id={`${idPrefix}-message`}
           name="message"
           rows={5}
@@ -175,6 +185,7 @@ export default function ContactInquiryForm({ className = "", idPrefix = "contact
 
       <button
         type="submit"
+        data-testid="contact-submit"
         disabled={pending}
         className="min-h-11 h-11 px-5 bg-primary text-white rounded-xl text-sm font-semibold shadow-sm shadow-primary/15 flex items-center justify-center gap-2 hover:bg-primary-container transition-colors duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-lowest"
       >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -10,7 +10,8 @@ import {
   Search,
   SortAsc,
 } from "lucide-react";
-import { formatApptTime, formatRelative, initialsFromName } from "@/lib/dashboard-format";
+import { formatApptTime, initialsFromName } from "@/lib/dashboard-format";
+import { RelativeTime } from "@/app/components/ui/RelativeTime";
 
 const SORTS = [
   { id: "recent", label: "Recently joined" },
@@ -21,9 +22,13 @@ const SORTS = [
 /**
  * @param {{ patients: { id: string; name: string; email: string; phone: string | null; createdAt: string; profileCompleted: boolean; visitCount: number; lastVisitAt: string | null; lastApptId: string | null; hasUpcoming: boolean }[] }} props
  */
-export function AdminPatientDirectory({ patients }) {
-  const [query, setQuery] = useState("");
+export function AdminPatientDirectory({ patients, initialQuery = "" }) {
+  const [query, setQuery] = useState(initialQuery);
   const [sort, setSort] = useState("recent");
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -117,7 +122,7 @@ export function AdminPatientDirectory({ patients }) {
                   </p>
                   <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-foreground/45">
                     {p.phone ? <span>{p.phone}</span> : <span>No phone on file</span>}
-                    <span>Joined {formatRelative(p.createdAt)}</span>
+                    <span>Joined <RelativeTime from={p.createdAt} /></span>
                     <span>
                       {p.visitCount} visit{p.visitCount === 1 ? "" : "s"}
                     </span>

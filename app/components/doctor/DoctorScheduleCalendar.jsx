@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarShell } from "@/app/components/calendar/CalendarShell";
 import { AgendaDayList } from "@/app/components/calendar/AgendaDayList";
-import { dateKey, todayKey } from "@/lib/calendar/dates";
+import { dateKey, todayKey, currentMonthAnchor } from "@/lib/calendar/dates";
 import { formatTimeOnly } from "@/lib/dashboard-format";
 import { PanelHead } from "@/app/components/dashboard/DashboardPanels";
 
@@ -18,12 +18,8 @@ function statusDot(status) {
 }
 
 export default function DoctorScheduleCalendar({ appointments = [] }) {
-  const now = useMemo(() => new Date(), []);
-  const [monthDate, setMonthDate] = useState(() => {
-    const d = new Date();
-    d.setDate(1);
-    return d;
-  });
+  const today = todayKey();
+  const [monthDate, setMonthDate] = useState(() => currentMonthAnchor());
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey());
 
   const byDate = useMemo(() => {
@@ -83,7 +79,7 @@ export default function DoctorScheduleCalendar({ appointments = [] }) {
               (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
             );
             const isCurrentMonth = day.getMonth() === monthDate.getMonth();
-            const isToday = key === dateKey(now);
+            const isToday = key === today;
             return (
               <div
                 className={`h-full ${

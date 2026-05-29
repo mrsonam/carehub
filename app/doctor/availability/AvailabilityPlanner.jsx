@@ -15,17 +15,9 @@ import { useToast } from "@/app/components/toast/ToastProvider";
 import { FormAlert } from "@/app/components/forms/FormField";
 import { FORM_ERROR_KEY } from "@/lib/forms/validate";
 import { CalendarShell } from "@/app/components/calendar/CalendarShell";
-import { displayDay, parseDateKey, todayKey } from "@/lib/calendar/dates";
-
-const FULL_WEEKDAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+import { displayDay, parseDateKey, todayKey, currentMonthAnchor } from "@/lib/calendar/dates";
+import { WEEKDAY_LABELS_LONG, weekdayFromDate } from "@/lib/calendar/weekdays";
+import { formatMonthDayShort } from "@/lib/dashboard-format";
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -194,7 +186,7 @@ function BlockFormModal({ modal, onClose, onDone }) {
       const body = {
         id: modal.block?.id,
         type: modal.type,
-        weekday: modal.weekday,
+        weekday: modal.weekday ?? modal.block?.weekday,
         date: modal.date,
         startMinutes,
         endMinutes,
@@ -240,11 +232,8 @@ function BlockFormModal({ modal, onClose, onDone }) {
 
   const label =
     modal.type === "rule"
-      ? FULL_WEEKDAYS[modal.weekday]
-      : new Date(`${modal.date}T00:00:00`).toLocaleDateString(undefined, {
-          month: "long",
-          day: "numeric",
-        });
+      ? WEEKDAY_LABELS_LONG[modal.weekday ?? modal.block?.weekday]
+      : formatMonthDayShort(parseDateKey(modal.date));
 
   return (
     <Modal
@@ -252,12 +241,13 @@ function BlockFormModal({ modal, onClose, onDone }) {
       subtitle={`${modal.type === "rule" ? "Weekly default" : "Date override"} · ${label}`}
       onClose={onClose}
     >
-      <form onSubmit={save} className="grid gap-5" noValidate>
+      <form data-testid="availability-modal-form" onSubmit={save} className="grid gap-5" noValidate>
         <FormAlert message={errors[FORM_ERROR_KEY]} />
         <div className="grid grid-cols-2 gap-3">
           <label className="grid gap-1.5">
             <span className="text-xs font-semibold text-foreground/60">Start</span>
             <select
+              data-testid="availability-start"
               value={start}
               onChange={(e) => {
                 setStart(e.target.value);
@@ -328,6 +318,7 @@ function BlockFormModal({ modal, onClose, onDone }) {
           )}
           <motion.button
             type="submit"
+            data-testid="availability-save"
             whileTap={{ scale: 0.97 }}
             disabled={Boolean(pending)}
             className="h-11 px-5 rounded-xl bg-primary text-white text-sm font-semibold shadow-sm shadow-primary/20 hover:bg-primary-container disabled:opacity-50"
@@ -359,7 +350,7 @@ function dayPlannerState(key, day, overridesByDate, rulesByWeekday) {
   const overridesForDay = overridesByDate[key] ?? [];
   const unavailable = overridesForDay.some((o) => o.isUnavailable);
   const customBlocks = sortBlocks(overridesForDay.filter((o) => !o.isUnavailable));
-  const defaultBlocks = sortBlocks(rulesByWeekday[String(day.getDay())] ?? []);
+  const defaultBlocks = sortBlocks(rulesByWeekday[String(weekdayFromDate(day))] ?? []);
   const blocks = unavailable
     ? []
     : customBlocks.length > 0
@@ -435,6 +426,7 @@ function PlannerMobilePanel({
       <div className="mt-3 grid gap-2">
         <motion.button
           type="button"
+          data-testid="availability-add-override"
           whileTap={{ scale: 0.98 }}
           onClick={onAddOverride}
           className="h-10 rounded-xl bg-primary text-white text-sm font-semibold inline-flex items-center justify-center gap-2"
@@ -445,6 +437,7 @@ function PlannerMobilePanel({
         <div className="grid grid-cols-2 gap-2">
           <motion.button
             type="button"
+            data-testid="availability-mark-off"
             whileTap={{ scale: 0.98 }}
             disabled={Boolean(pendingDay)}
             onClick={onMarkUnavailable}
@@ -495,11 +488,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
   const router = useRouter();
   const toast = useToast();
   const today = todayKey();
-  const [monthDate, setMonthDate] = useState(() => {
-    const d = new Date();
-    d.setDate(1);
-    return d;
-  });
+  const [monthDate, setMonthDate] = useState(() => currentMonthAnchor());
   const [selectedDate, setSelectedDate] = useState(today);
   const [modal, setModal] = useState(null);
   const [pendingDay, setPendingDay] = useState("");
@@ -517,7 +506,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
   const selected = parseDateKey(selectedDate);
   const selectedOverrides = sortBlocks(overridesByDate[selectedDate] ?? []);
   const selectedUnavailable = selectedOverrides.some((o) => o.isUnavailable);
-  const selectedRuleBlocks = sortBlocks(rulesByWeekday[String(selected.getDay())] ?? []);
+  const selectedRuleBlocks = sortBlocks(rulesByWeekday[String(weekdayFromDate(selected))] ?? []);
   const overrideBlocks = selectedOverrides.filter((o) => !o.isUnavailable);
   const effectiveBlocks = selectedUnavailable
     ? []
@@ -725,7 +714,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
                   type,
                   block,
                   existingBlocks,
-                  weekday: selected.getDay(),
+                  weekday: weekdayFromDate(selected),
                   date: selectedDate,
                 })
               }
@@ -795,7 +784,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
                                 type: overrideBlocks.length > 0 ? "override" : "rule",
                                 block,
                                 existingBlocks: overrideBlocks.length > 0 ? overrideBlocks : selectedRuleBlocks,
-                                weekday: selected.getDay(),
+                                weekday: weekdayFromDate(selected),
                                 date: selectedDate,
                               })
                             }
@@ -808,6 +797,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
                   <div className="mt-4 grid gap-2">
                     <motion.button
                       type="button"
+                      data-testid="availability-add-override"
                       whileTap={{ scale: 0.98 }}
                       onClick={() =>
                         setModal({
@@ -863,7 +853,7 @@ export function AvailabilityPlanner({ rules, overrides }) {
                   </div>
 
                   <div className="mt-4 grid gap-3">
-                    {FULL_WEEKDAYS.map((day, weekday) => {
+                    {WEEKDAY_LABELS_LONG.map((day, weekday) => {
                       const dayRules = sortBlocks(rulesByWeekday[String(weekday)] ?? []);
                       return (
                         <div

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
+import { autoCloseExpiredAppointments } from "@/lib/appointment-lifecycle";
 import { prisma } from "@/lib/prisma";
 import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
 import { PatientDashboardHome } from "@/app/components/patient/PatientDashboardHome";
@@ -20,6 +21,7 @@ function scopeForPatient(user) {
 
 async function loadPatientDashboard(user) {
   const w = scopeForPatient(user);
+  await autoCloseExpiredAppointments(prisma, w);
   const now = new Date();
   const weekEnd = new Date(now.getTime() + 7 * DAY_MS);
   const terminalStatuses = ["CANCELLED", "COMPLETED", "NO_SHOW"];

@@ -65,6 +65,7 @@ export default function CreateStaffForm() {
 
   return (
     <form
+      data-testid="staff-form"
       onSubmit={submit}
       className="panel p-6 flex flex-col gap-5 max-w-lg"
       noValidate

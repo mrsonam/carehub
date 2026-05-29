@@ -9,7 +9,9 @@ export async function POST(req) {
   if (auth.response) return auth.response;
 
   const body = await req.json().catch(() => ({}));
-  const ids = Array.isArray(body?.ids) ? body.ids : [];
+  const ids = Array.isArray(body?.ids)
+    ? body.ids.filter((id) => typeof id === "string" && id.trim())
+    : [];
   const markAll = body?.all === true;
 
   if (!markAll && ids.length === 0) {

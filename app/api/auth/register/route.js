@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { setSessionFromUser } from "@/lib/session-cookie";
+import { isValidEmail } from "@/lib/forms/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,9 @@ export async function POST(req) {
 
   if (!name || !email || !password) {
     return Response.json({ ok: false, error: "Missing required fields." }, { status: 400 });
+  }
+  if (!isValidEmail(email)) {
+    return Response.json({ ok: false, error: "Enter a valid email address." }, { status: 400 });
   }
   if (typeof password !== "string" || password.length < 8) {
     return Response.json({ ok: false, error: "Password must be at least 8 characters." }, { status: 400 });

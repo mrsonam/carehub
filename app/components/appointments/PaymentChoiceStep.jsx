@@ -55,6 +55,7 @@ export function PaymentChoiceStep({ appointmentId, feeAmountCents, onComplete })
 
   return (
     <motion.div
+      data-testid="payment-choice"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
@@ -78,6 +79,7 @@ export function PaymentChoiceStep({ appointmentId, feeAmountCents, onComplete })
       >
         <motion.button
           type="button"
+          data-testid="payment-pay-now"
           whileTap={{ scale: 0.98 }}
           disabled={Boolean(pending)}
           onClick={payNow}
@@ -88,6 +90,7 @@ export function PaymentChoiceStep({ appointmentId, feeAmountCents, onComplete })
         </motion.button>
         <motion.button
           type="button"
+          data-testid="payment-pay-counter"
           whileTap={{ scale: 0.98 }}
           disabled={Boolean(pending)}
           onClick={payAtCounter}
