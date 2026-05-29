@@ -7,6 +7,7 @@ import {
   Video,
 } from "lucide-react";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
+import { readSearchQuery } from "@/lib/dashboard-search";
 import { prisma } from "@/lib/prisma";
 import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
@@ -31,7 +32,9 @@ function apptMatchesDoctor(appt, doctor) {
   return !appt.doctorId && dn && dn === doctor.name.trim().toLowerCase();
 }
 
-export default async function PatientDoctorsPage() {
+export default async function PatientDoctorsPage({ searchParams }) {
+  const sp = await Promise.resolve(searchParams);
+  const initialQuery = readSearchQuery(sp?.q);
   const cookieStore = await cookies();
   const token = cookieStore.get(getSessionCookieName())?.value;
   const session = token ? await verifySessionToken(token).catch(() => null) : null;
@@ -163,7 +166,7 @@ export default async function PatientDoctorsPage() {
           Search and filter the roster. “Book visit” opens your appointment form with that doctor selected.
         </p>
         <div className="mt-6">
-          <PatientDoctorsDirectory doctors={doctors} />
+          <PatientDoctorsDirectory doctors={doctors} initialQuery={initialQuery} />
         </div>
       </section>
     </div>

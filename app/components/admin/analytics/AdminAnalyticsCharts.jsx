@@ -8,6 +8,7 @@ import {
   Minus,
 } from "lucide-react";
 import { AppointmentStatusBadge } from "../../appointments/AppointmentStatusBadge";
+import { CLINIC_LOCALE, formatNumber } from "@/lib/dashboard-format";
 
 const EASE_OUT = [0.23, 1, 0.32, 1];
 
@@ -67,7 +68,7 @@ export function AnalyticsKpiGrid({ kpis }) {
             {kpi.label}
           </motion.p>
           <p className="text-2xl sm:text-3xl font-black font-manrope tracking-tight tabular-nums leading-none">
-            {typeof kpi.value === "number" ? kpi.value.toLocaleString() : kpi.value}
+            {typeof kpi.value === "number" ? formatNumber(kpi.value) : kpi.value}
           </p>
           <motion.div
             className="mt-auto flex flex-wrap items-center justify-between gap-2"
@@ -232,7 +233,7 @@ export function RevenueBarsChart({ months, ariaLabel = "Monthly revenue collecte
           const barH = m.cents ? Math.max(pct, 10) : 0;
           const aud =
             m.cents > 0
-              ? (m.cents / 100).toLocaleString("en-AU", {
+              ? (m.cents / 100).toLocaleString(CLINIC_LOCALE, {
                   style: "currency",
                   currency: "AUD",
                   maximumFractionDigits: 0,
@@ -276,7 +277,7 @@ export function RevenueBarsChart({ months, ariaLabel = "Monthly revenue collecte
       </motion.div>
       <div className="px-4 py-3 border-t border-primary/[0.06] text-center text-xs text-foreground/55">
         <span className="font-bold tabular-nums text-foreground">
-          {(total / 100).toLocaleString("en-AU", {
+          {(total / 100).toLocaleString(CLINIC_LOCALE, {
             style: "currency",
             currency: "AUD",
             maximumFractionDigits: 0,

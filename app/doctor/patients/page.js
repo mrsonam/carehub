@@ -2,11 +2,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { CalendarClock, ClipboardList, UserRound, Users } from "lucide-react";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
+import { readSearchQuery } from "@/lib/dashboard-search";
 import { prisma } from "@/lib/prisma";
 import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
 import { DoctorPatientDirectory } from "../../components/doctor/DoctorPatientDirectory";
 import { DoctorPatientsAnalytics } from "../../components/doctor/DoctorPatientsAnalytics";
+import { formatMonthShort } from "@/lib/dashboard-format";
 
 export const dynamic = "force-dynamic";
 
@@ -116,7 +118,7 @@ function buildMonthlyVolume(appointments) {
     const end = new Date(start);
     end.setMonth(end.getMonth() + 1);
     buckets.push({
-      label: start.toLocaleDateString(undefined, { month: "short" }),
+      label: formatMonthShort(start),
       count: 0,
       highlight: i === 0,
       startMs: start.getTime(),
@@ -143,7 +145,9 @@ function buildStatusSlices(appointments) {
   return STATUS_ORDER.map((status) => ({ status, count: counts[status] }));
 }
 
-export default async function DoctorPatientsPage() {
+export default async function DoctorPatientsPage({ searchParams }) {
+  const sp = await Promise.resolve(searchParams);
+  const initialQuery = readSearchQuery(sp?.q);
   const cookieStore = await cookies();
   const token = cookieStore.get(getSessionCookieName())?.value;
   const session = token ? await verifySessionToken(token).catch(() => null) : null;
@@ -257,7 +261,7 @@ export default async function DoctorPatientsPage() {
           the most recent record.
         </p>
         <div className="mt-6">
-          <DoctorPatientDirectory patients={patientsWithAvatars} />
+          <DoctorPatientDirectory patients={patientsWithAvatars} initialQuery={initialQuery} />
         </div>
       </section>
     </div>

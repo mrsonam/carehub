@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { formatNumber } from "@/lib/dashboard-format";
+
 export function Metric({ icon: Icon, label, value, hint }) {
   return (
     <div className="panel p-4 sm:p-5 flex flex-col gap-4 min-w-0">
@@ -12,7 +14,7 @@ export function Metric({ icon: Icon, label, value, hint }) {
           {label}
         </p>
         <p className="mt-1.5 text-2xl sm:text-3xl font-black font-manrope tracking-tight tabular-nums">
-          {typeof value === "number" ? value.toLocaleString() : value}
+          {typeof value === "number" ? formatNumber(value) : value}
         </p>
         {hint ? <p className="mt-1 text-xs text-foreground/50">{hint}</p> : null}
       </div>

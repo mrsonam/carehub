@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CalendarCheck2, CalendarClock, ClipboardList, Eye, Timer } from "lucide-react";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
-import { autoCloseExpiredAppointments } from "@/lib/appointment-lifecycle";
+import { autoCloseExpiredAppointments, isActiveUpcomingAppointment, isCalendarVisibleAppointment } from "@/lib/appointment-lifecycle";
+import { readSearchQuery } from "@/lib/dashboard-search";
 import { prisma } from "@/lib/prisma";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
 import { formatApptTime, formatTimeOnly } from "@/lib/dashboard-format";
@@ -35,6 +36,7 @@ function statusTone(status) {
 
 export default async function DoctorSchedulePage({ searchParams }) {
   const sp = await Promise.resolve(searchParams);
+  const initialQuery = readSearchQuery(sp?.q);
   const focus = sp?.focus;
   const cookieStore = await cookies();
   const token = cookieStore.get(getSessionCookieName())?.value;
@@ -58,7 +60,8 @@ export default async function DoctorSchedulePage({ searchParams }) {
 
   const terminalStatuses = ["CANCELLED", "COMPLETED", "NO_SHOW"];
   const now = new Date();
-  const active = appointments.filter((a) => !terminalStatuses.includes(a.status));
+  const active = appointments.filter((a) => isActiveUpcomingAppointment(a, now));
+  const calendarAppointments = appointments.filter((a) => isCalendarVisibleAppointment(a, now));
   const finished = appointments.filter((a) => terminalStatuses.includes(a.status));
   const finishedRows = finished.map((appt) => ({
     ...appt,
@@ -68,7 +71,7 @@ export default async function DoctorSchedulePage({ searchParams }) {
   const nowUpcoming = active.filter((a) => new Date(a.scheduledAt) >= now);
   const ongoingCount = active.filter((a) => a.status === "ONGOING").length;
   const todayKeyValue = dateKey(now);
-  const todayCount = appointments.filter(
+  const todayCount = calendarAppointments.filter(
     (a) => dateKey(new Date(a.scheduledAt)) === todayKeyValue
   ).length;
 
@@ -91,7 +94,7 @@ export default async function DoctorSchedulePage({ searchParams }) {
       </section>
 
       <DoctorScheduleCalendar
-        appointments={appointments.map((appt) => ({
+        appointments={calendarAppointments.map((appt) => ({
           ...appt,
           scheduledAt: appt.scheduledAt.toISOString(),
         }))}
@@ -125,9 +128,6 @@ export default async function DoctorSchedulePage({ searchParams }) {
                       <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold ${statusTone(appt.status).chip}`}>
                         {appt.status.replace("_", " ")}
                       </span>
-                      <span className="inline-flex items-center rounded-full border border-primary/[0.08] bg-surface-low px-2.5 py-1 text-[10px] font-semibold text-foreground/55">
-                        {new Date(appt.scheduledAt) >= now ? "Upcoming" : "Past due"}
-                      </span>
                     </div>
                     <p className="text-xs text-foreground/50 mt-1">
                       {formatApptTime(appt.scheduledAt)} · {appt.durationMinutes ?? 15} min
@@ -158,7 +158,7 @@ export default async function DoctorSchedulePage({ searchParams }) {
             Completed visits, no-shows, and cancellations will appear here.
           </p>
         ) : (
-          <DoctorRecordsWorkspace records={finishedRows} focus={focus} />
+          <DoctorRecordsWorkspace records={finishedRows} focus={focus} initialQuery={initialQuery} />
         )}
       </section>
     </div>

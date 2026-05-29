@@ -1,6 +1,5 @@
 import { getSessionUserOrErrorResponse } from "@/lib/auth-server";
 import { prisma } from "@/lib/prisma";
-import { createAppointmentReminderNotifications } from "@/lib/notifications/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,8 +7,6 @@ export const dynamic = "force-dynamic";
 export async function GET(req) {
   const auth = await getSessionUserOrErrorResponse();
   if (auth.response) return auth.response;
-
-  await createAppointmentReminderNotifications().catch(() => null);
 
   const url = new URL(req.url);
   const limit = Math.min(Number(url.searchParams.get("limit") ?? 30) || 30, 100);

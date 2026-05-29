@@ -18,7 +18,9 @@ import {
   monthGrid,
   dateKeyOffset,
   todayKey as calendarTodayKey,
+  currentMonthAnchor,
 } from "@/lib/calendar/dates";
+import { formatTimeOnly } from "@/lib/dashboard-format";
 
 const DURATION_OPTIONS = [15, 30, 45, 60];
 
@@ -36,11 +38,7 @@ export function AppointmentBookingForm({
   const router = useRouter();
   const toast = useToast();
   const usesSlotPicker = mode === "patient" || mode === "admin";
-  const [monthDate, setMonthDate] = useState(() => {
-    const d = new Date();
-    d.setDate(1);
-    return d;
-  });
+  const [monthDate, setMonthDate] = useState(() => currentMonthAnchor());
   const bookingDates = useMemo(() => monthGrid(monthDate), [monthDate]);
   const todayKey = calendarTodayKey();
   const [doctorId, setDoctorId] = useState(() => resolveInitialDoctorId(doctors, initialDoctorId));
@@ -208,6 +206,8 @@ export function AppointmentBookingForm({
         }
         router.refresh();
       }
+    } catch {
+      setError("Could not reach the server. Check your connection and try again.");
     } finally {
       setPending(false);
     }
@@ -215,6 +215,7 @@ export function AppointmentBookingForm({
 
   return (
     <motion.form
+      data-testid="booking-form"
       onSubmit={submit}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -259,6 +260,7 @@ export function AppointmentBookingForm({
             </span>
             {patients.length > 0 ? (
               <select
+                data-testid="booking-patient"
                 value={patientId}
                 onChange={(e) => setPatientId(e.target.value)}
                 className="h-11 rounded-lg bg-surface-low border border-primary/[0.1] px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -295,6 +297,7 @@ export function AppointmentBookingForm({
             <Stethoscope size={14} /> Doctor
           </span>
           <select
+            data-testid="booking-doctor"
             value={doctorId}
             onChange={(e) => setDoctorId(e.target.value)}
             className="h-11 rounded-lg bg-surface-low border border-primary/[0.1] px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -316,6 +319,7 @@ export function AppointmentBookingForm({
               <Clock size={14} /> Visit length
             </span>
             <select
+              data-testid="booking-duration"
               value={durationMinutes}
               onChange={(e) => {
                 setDurationMinutes(Number(e.target.value));
@@ -353,6 +357,7 @@ export function AppointmentBookingForm({
 
       {usesSlotPicker ? (
         <div
+          data-testid="booking-slots-panel"
           className={`mt-4 rounded-2xl bg-surface-low p-4 ${
             fieldErrors.selectedSlot ? "ring-2 ring-red-500/30" : ""
           }`}
@@ -372,10 +377,7 @@ export function AppointmentBookingForm({
             </div>
             {selectedSlot ? (
               <span className="rounded-full bg-primary/10 text-primary px-3 py-1.5 text-xs font-semibold">
-                Selected {new Date(selectedSlot).toLocaleTimeString(undefined, {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })} · {durationMinutes} min
+                Selected {formatTimeOnly(selectedSlot)} · {durationMinutes} min
               </span>
             ) : null}
           </div>
@@ -404,6 +406,7 @@ export function AppointmentBookingForm({
                     <motion.button
                       key={`${slot.startsAt}-${index}`}
                       type="button"
+                      data-testid="booking-slot"
                       whileTap={{ scale: 0.97 }}
                       onClick={() => {
                         setSelectedSlot(slot.startsAt);
@@ -433,6 +436,7 @@ export function AppointmentBookingForm({
           <FileText size={14} /> {usesSlotPicker ? "Describe the problem" : "Notes"}
         </span>
         <textarea
+          data-testid="booking-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
@@ -465,6 +469,7 @@ export function AppointmentBookingForm({
       <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3">
         <motion.button
           type="submit"
+          data-testid="booking-submit"
           whileTap={{ scale: 0.98 }}
           disabled={pending || showPaymentStep || (usesSlotPicker && !selectedSlot)}
           className="h-11 px-5 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm shadow-primary/20 hover:bg-primary-container transition-colors disabled:opacity-50"

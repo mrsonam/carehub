@@ -243,16 +243,22 @@ export async function DELETE(request) {
   const id = searchParams.get("id") ?? "";
 
   if (type === "rule") {
-    await prisma.doctorAvailabilityRule.deleteMany({
+    const result = await prisma.doctorAvailabilityRule.deleteMany({
       where: { id, doctorId: auth.user.id },
     });
+    if (result.count === 0) {
+      return Response.json({ ok: false, error: "Availability rule not found." }, { status: 404 });
+    }
     return Response.json({ ok: true });
   }
 
   if (type === "override") {
-    await prisma.doctorAvailabilityOverride.deleteMany({
+    const result = await prisma.doctorAvailabilityOverride.deleteMany({
       where: { id, doctorId: auth.user.id },
     });
+    if (result.count === 0) {
+      return Response.json({ ok: false, error: "Availability override not found." }, { status: 404 });
+    }
     return Response.json({ ok: true });
   }
 

@@ -3,8 +3,12 @@ import {
   isWithinConsultationActionWindow,
   resolveAutoCloseStatus,
 } from "@/lib/appointment-lifecycle";
+import { doctorHasSchedulingConflict } from "@/lib/booking/overlap";
+import { canManageAppointment } from "@/lib/booking/ownership";
+import { validateStatusTransition } from "@/lib/booking/status-transitions";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications/notifications";
+import { formatApptTime } from "@/lib/dashboard-format";
 import {
   PAYMENT_REQUIRED_BEFORE_START_MESSAGE,
   requiresPaymentBeforeConsultation,
@@ -24,17 +28,6 @@ const STATUSES = new Set([
 
 function cleanText(value, fallback = "") {
   return typeof value === "string" ? value.trim() : fallback;
-}
-
-function canManageAppointment(user, appointment) {
-  if (user.role === "ADMIN") return true;
-  if (user.role === "DOCTOR") {
-    return appointment.doctorId === user.id || appointment.doctorName?.toLowerCase() === user.name.toLowerCase();
-  }
-  if (user.role === "PATIENT") {
-    return appointment.patientId === user.id || appointment.patientName.toLowerCase() === user.name.toLowerCase();
-  }
-  return false;
 }
 
 export async function PATCH(request, { params }) {
@@ -70,6 +63,12 @@ export async function PATCH(request, { params }) {
     if (!STATUSES.has(status)) {
       return Response.json({ ok: false, error: "Invalid appointment status." }, { status: 400 });
     }
+
+    const transitionError = validateStatusTransition(auth.user.role, appointment.status, status);
+    if (transitionError) {
+      return Response.json({ ok: false, error: transitionError }, { status: 403 });
+    }
+
     if (auth.user.role === "PATIENT" && status !== "CANCELLED") {
       return Response.json({ ok: false, error: "Patients can only cancel appointments." }, { status: 403 });
     }
@@ -136,6 +135,22 @@ export async function PATCH(request, { params }) {
     if (Number.isNaN(scheduledAt.getTime())) {
       return Response.json({ ok: false, error: "Choose a valid date and time." }, { status: 400 });
     }
+
+    if (appointment.doctorId) {
+      const hasConflict = await doctorHasSchedulingConflict(prisma, {
+        doctorId: appointment.doctorId,
+        scheduledAt,
+        durationMinutes: appointment.durationMinutes || 15,
+        excludeAppointmentId: appointment.id,
+      });
+      if (hasConflict) {
+        return Response.json(
+          { ok: false, error: "That time conflicts with another appointment." },
+          { status: 409 }
+        );
+      }
+    }
+
     update.scheduledAt = scheduledAt;
   }
 
@@ -150,13 +165,7 @@ export async function PATCH(request, { params }) {
   });
 
   if (typeof update.status === "string" && update.status !== prevStatus) {
-    const whenLabel = updated.scheduledAt.toLocaleString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    const whenLabel = formatApptTime(updated.scheduledAt);
 
     if (update.status === "CONFIRMED") {
       if (updated.patientId) {

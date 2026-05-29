@@ -12,12 +12,14 @@ import {
  *   children: React.ReactNode;
  *   className?: string;
  *   disabledClassName?: string;
+ *   testId?: string;
  * }} props
  */
 export default function BookAppointmentButton({
   children,
   className = "",
   disabledClassName = "opacity-60 pointer-events-none",
+  testId = "book-appointment-cta",
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -44,6 +46,7 @@ export default function BookAppointmentButton({
   return (
     <button
       type="button"
+      data-testid={testId}
       onClick={onClick}
       disabled={pending}
       aria-busy={pending}

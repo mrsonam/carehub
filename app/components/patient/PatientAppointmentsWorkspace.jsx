@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarCheck2, CalendarClock, Eye, Search } from "lucide-react";
@@ -29,10 +29,16 @@ export default function PatientAppointmentsWorkspace({
   past = [],
   focus,
   terminalStatuses = ["CANCELLED", "COMPLETED", "NO_SHOW"],
+  initialQuery = "",
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [scope, setScope] = useState("UPCOMING");
+
+  useEffect(() => {
+    setQuery(initialQuery);
+    if (initialQuery) setScope("ALL");
+  }, [initialQuery]);
 
   const allRows = useMemo(
     () => [

@@ -1,17 +1,11 @@
 import { getSessionUserOrErrorResponse } from "@/lib/auth-server";
+import { patientOwnsAppointment } from "@/lib/booking/ownership";
 import { getStripe } from "@/lib/payments/stripe";
 import { handleCheckoutCompleted } from "@/lib/payments/webhook";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function ownsAppointment(user, appointment) {
-  return (
-    appointment.patientId === user.id ||
-    appointment.patientName.toLowerCase() === user.name.toLowerCase()
-  );
-}
 
 export async function POST(request) {
   const auth = await getSessionUserOrErrorResponse();
@@ -23,7 +17,6 @@ export async function POST(request) {
 
   const body = await request.json().catch(() => ({}));
   const appointmentId = body.appointmentId;
-  const sessionId = body.sessionId;
 
   if (!appointmentId) {
     return Response.json({ ok: false, error: "appointmentId is required." }, { status: 400 });
@@ -34,7 +27,7 @@ export async function POST(request) {
     return Response.json({ ok: false, error: "Appointment not found." }, { status: 404 });
   }
 
-  if (!ownsAppointment(auth.user, appointment)) {
+  if (!patientOwnsAppointment(auth.user, appointment)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -42,7 +35,7 @@ export async function POST(request) {
     return Response.json({ ok: true, appointment });
   }
 
-  const checkoutSessionId = sessionId || appointment.stripeCheckoutSessionId;
+  const checkoutSessionId = appointment.stripeCheckoutSessionId;
   if (!checkoutSessionId) {
     return Response.json(
       { ok: false, error: "No checkout session found for this appointment." },
@@ -50,7 +43,23 @@ export async function POST(request) {
     );
   }
 
-  const session = await getStripe().checkout.sessions.retrieve(checkoutSessionId);
+  let session;
+  try {
+    session = await getStripe().checkout.sessions.retrieve(checkoutSessionId);
+  } catch {
+    return Response.json(
+      { ok: false, error: "Could not verify payment session." },
+      { status: 502 }
+    );
+  }
+
+  if (session.metadata?.appointmentId !== appointmentId) {
+    return Response.json(
+      { ok: false, error: "Payment session does not match this appointment." },
+      { status: 400 }
+    );
+  }
+
   if (session.payment_status !== "paid") {
     return Response.json(
       { ok: false, error: "Payment is not completed yet." },
@@ -58,7 +67,13 @@ export async function POST(request) {
     );
   }
 
-  await handleCheckoutCompleted(prisma, session);
+  const result = await handleCheckoutCompleted(prisma, session);
+  if (!result.handled) {
+    return Response.json(
+      { ok: false, error: "Payment could not be confirmed." },
+      { status: 400 }
+    );
+  }
 
   const updated = await prisma.appointment.findUnique({ where: { id: appointmentId } });
   return Response.json({ ok: true, appointment: updated });

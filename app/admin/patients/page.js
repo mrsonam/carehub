@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { CalendarClock, UserPlus, UserRound, Users } from "lucide-react";
+import { readSearchQuery } from "@/lib/dashboard-search";
 import { requireAdminUser } from "@/lib/auth-server";
 import { prisma } from "@/lib/prisma";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
 import { AdminPatientDirectory } from "../../components/admin/AdminPatientDirectory";
 import { DoctorVolumeChart } from "../../components/doctor/DoctorVolumeChart";
+import { formatMonthShort } from "@/lib/dashboard-format";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +20,7 @@ function buildMonthlyRegistrations(users) {
     const end = new Date(start);
     end.setMonth(end.getMonth() + 1);
     buckets.push({
-      label: start.toLocaleDateString(undefined, { month: "short" }),
+      label: formatMonthShort(start),
       count: 0,
       highlight: i === 0,
       startMs: start.getTime(),
@@ -37,8 +39,10 @@ function buildMonthlyRegistrations(users) {
   return buckets.map(({ label, count, highlight }) => ({ label, count, highlight }));
 }
 
-export default async function AdminPatientsPage() {
+export default async function AdminPatientsPage({ searchParams }) {
   await requireAdminUser("/admin/patients");
+  const sp = await Promise.resolve(searchParams);
+  const initialQuery = readSearchQuery(sp?.q);
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -198,7 +202,7 @@ export default async function AdminPatientsPage() {
           person.
         </p>
         <div className="mt-6">
-          <AdminPatientDirectory patients={patients} />
+          <AdminPatientDirectory patients={patients} initialQuery={initialQuery} />
         </div>
       </section>
     </div>

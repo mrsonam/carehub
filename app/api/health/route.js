@@ -17,13 +17,8 @@ export async function GET() {
       dbOk: rows?.[0]?.ok === 1,
     });
   } catch (err) {
-    return Response.json(
-      {
-        ok: false,
-        error: err instanceof Error ? err.message : String(err),
-      },
-      { status: 500 }
-    );
+    console.error("[health]", err);
+    return Response.json({ ok: false, dbOk: false }, { status: 500 });
   }
 }
 

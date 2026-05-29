@@ -202,6 +202,58 @@ async function main() {
     await prisma.appointment.createMany({ data: appointmentFixtures });
   }
 
+  const primaryDoctor = seededDoctors[0];
+  const docManualOngoing = await prisma.appointment.findFirst({
+    where: {
+      doctorId: primaryDoctor.id,
+      status: "ONGOING",
+      patientNotes: { contains: "[manual-doc]" },
+    },
+  });
+  if (!docManualOngoing) {
+    await prisma.appointment.create({
+      data: {
+        patientId: patient.id,
+        doctorId: primaryDoctor.id,
+        patientName: patient.name,
+        doctorName: primaryDoctor.name,
+        status: "ONGOING",
+        scheduledAt: new Date(Date.now() - 3 * 60 * 1000),
+        durationMinutes: 15,
+        patientNotes: "[manual-doc] Live consultation for user manual screenshots.",
+        doctorNotes: "Reviewing symptoms and care plan.",
+        consultationStartedAt: new Date(),
+        feeAmountCents: 0,
+        paymentStatus: "UNPAID",
+      },
+    });
+  }
+
+  const patientManualUnpaid = await prisma.appointment.findFirst({
+    where: {
+      patientId: patient.id,
+      patientNotes: { contains: "[manual-pat]" },
+      paymentStatus: "UNPAID",
+      feeAmountCents: { gt: 0 },
+    },
+  });
+  if (!patientManualUnpaid) {
+    await prisma.appointment.create({
+      data: {
+        patientId: patient.id,
+        doctorId: primaryDoctor.id,
+        patientName: patient.name,
+        doctorName: primaryDoctor.name,
+        status: "CONFIRMED",
+        scheduledAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+        durationMinutes: 15,
+        patientNotes: "[manual-pat] Example visit with an outstanding fee.",
+        feeAmountCents: 5000,
+        paymentStatus: "UNPAID",
+      },
+    });
+  }
+
   console.log("Seeded users:");
   console.log("- admin@carehub.local / admin123 (ADMIN)");
   console.log("- patient@carehub.local / admin123 (PATIENT)");

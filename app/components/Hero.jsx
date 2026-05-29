@@ -30,7 +30,10 @@ export default function Hero() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <BookAppointmentButton className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-container hover:-translate-y-0.5 transition-all cursor-pointer">
+            <BookAppointmentButton
+              testId="book-appointment-cta-hero"
+              className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-container hover:-translate-y-0.5 transition-all cursor-pointer"
+            >
               Book an Appointment
             </BookAppointmentButton>
             <Link

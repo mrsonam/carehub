@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarClock, Eye, Search } from "lucide-react";
 import {
   isWithinConsultationActionWindow,
+  isActiveUpcomingAppointment,
 } from "@/lib/appointment-lifecycle";
 import { requiresPaymentBeforeConsultation } from "@/lib/payments/consultation-gate";
 import { AppointmentStatusActions } from "../appointments/AppointmentStatusActions";
@@ -47,19 +48,20 @@ function actionsFor(appointment) {
   return [];
 }
 
-export default function AppointmentsWorkspace({ appointments = [] }) {
-  const [query, setQuery] = useState("");
+export default function AppointmentsWorkspace({ appointments = [], initialQuery = "" }) {
+  const [query, setQuery] = useState(initialQuery);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [scope, setScope] = useState("UPCOMING");
 
+  useEffect(() => {
+    setQuery(initialQuery);
+    if (initialQuery) setScope("ALL");
+  }, [initialQuery]);
+
   const allRows = useMemo(() => {
-    const now = Date.now();
     return appointments.map((appt) => ({
       ...appt,
-      bucket:
-        !TERMINAL_STATUSES.includes(appt.status) && new Date(appt.scheduledAt).getTime() >= now
-          ? "UPCOMING"
-          : "PAST",
+      bucket: isActiveUpcomingAppointment(appt) ? "UPCOMING" : "PAST",
     }));
   }, [appointments]);
 

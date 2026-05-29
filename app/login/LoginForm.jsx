@@ -146,6 +146,7 @@ export default function LoginForm() {
                   />
                   <input
                     id="login-email"
+                    data-testid="login-email"
                     type="email"
                     autoComplete="email"
                     placeholder="you@example.com"
@@ -173,6 +174,7 @@ export default function LoginForm() {
                   />
                   <input
                     id="login-password"
+                    data-testid="login-password"
                     type="password"
                     autoComplete="current-password"
                     placeholder="Your password"
@@ -194,6 +196,7 @@ export default function LoginForm() {
 
               <button
                 type="submit"
+                data-testid="login-submit"
                 disabled={loading}
                 className="group w-full h-12 rounded-xl bg-primary text-white text-sm font-semibold shadow-md shadow-primary/20 hover:bg-primary-container transition-colors disabled:opacity-55 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >

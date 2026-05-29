@@ -9,6 +9,8 @@
  *   dedupe limits duplicate notifications, but you still get extra DB work — prefer a secret in production).
  */
 import { createAppointmentReminderNotifications } from "@/lib/notifications/notifications";
+import { autoCloseExpiredAppointments } from "@/lib/appointment-lifecycle";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,13 +33,18 @@ function cronAuthorized(request, secret) {
 
 export async function GET(request) {
   const secret = String(process.env.CRON_SECRET ?? "").trim();
-  if (secret && !cronAuthorized(request, secret)) {
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      return Response.json({ ok: false, error: "Cron is not configured." }, { status: 503 });
+    }
+  } else if (!cronAuthorized(request, secret)) {
     return new Response("Unauthorized", { status: 401 });
   }
 
   try {
+    const closed = await autoCloseExpiredAppointments(prisma);
     const result = await createAppointmentReminderNotifications();
-    return Response.json(result);
+    return Response.json({ ...result, autoClosed: closed });
   } catch (err) {
     console.error("[cron/appointment-reminders]", err);
     return Response.json(

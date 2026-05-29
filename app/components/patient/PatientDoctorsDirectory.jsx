@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -12,7 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { formatApptTime, formatRelative } from "@/lib/dashboard-format";
+import { formatApptTime } from "@/lib/dashboard-format";
+import { RelativeTime } from "@/app/components/ui/RelativeTime";
 import { UserAvatar } from "@/app/components/profile/UserAvatar";
 
 const FILTERS = [
@@ -31,10 +32,14 @@ const SORTS = [
 /**
  * @param {{ doctors: { id: string; name: string; title: string | null; bioPreview: string | null; avatarUrl: string | null; hasRules: boolean; visitCountWithYou: number; upcomingWithYou: number; lastVisitAt: string | null }[] }} props
  */
-export function PatientDoctorsDirectory({ doctors }) {
-  const [query, setQuery] = useState("");
+export function PatientDoctorsDirectory({ doctors, initialQuery = "" }) {
+  const [query, setQuery] = useState(initialQuery);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("name");
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -190,7 +195,7 @@ export function PatientDoctorsDirectory({ doctors }) {
 
               {d.lastVisitAt ? (
                 <p className="px-5 pb-4 text-[11px] text-foreground/45 -mt-1">
-                  Last touch {formatRelative(d.lastVisitAt)}
+                  Last touch <RelativeTime from={d.lastVisitAt} />
                   <span className="text-foreground/35"> · </span>
                   {formatApptTime(d.lastVisitAt)}
                 </p>
@@ -199,6 +204,7 @@ export function PatientDoctorsDirectory({ doctors }) {
               <div className="mt-auto flex flex-wrap gap-2 p-5 pt-0 border-t border-primary/[0.06]">
                 <Link
                   href={`/patient/appointments?doctor=${encodeURIComponent(d.id)}`}
+                  data-testid="doctor-book-visit"
                   className="inline-flex flex-1 min-w-[8rem] items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-white text-xs font-semibold shadow-sm shadow-primary/20 hover:bg-primary-container transition-colors"
                 >
                   <CalendarPlus size={15} aria-hidden />

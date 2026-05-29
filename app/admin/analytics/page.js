@@ -1,8 +1,6 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { requireAdminUser } from "@/lib/auth-server";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
-import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 import { loadAdminAnalytics } from "@/lib/admin-analytics";
 import { PanelHead } from "../../components/dashboard/DashboardPanels";
 import {
@@ -19,11 +17,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function AdminAnalyticsPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(getSessionCookieName())?.value;
-  const session = token ? await verifySessionToken(token).catch(() => null) : null;
-  if (!session) redirect("/login?next=/admin/analytics");
-  if (session.role !== "ADMIN") redirect("/dashboard");
+  await requireAdminUser("/admin/analytics");
 
   const data = await loadAdminAnalytics();
   const statusTotal = data.statusItems.reduce((s, i) => s + i.count, 0);

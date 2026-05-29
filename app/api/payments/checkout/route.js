@@ -1,17 +1,11 @@
 import { getSessionUserOrErrorResponse } from "@/lib/auth-server";
+import { patientOwnsAppointment } from "@/lib/booking/ownership";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { createAppointmentCheckoutSession } from "@/lib/payments/stripe";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function ownsAppointment(user, appointment) {
-  return (
-    appointment.patientId === user.id ||
-    appointment.patientName.toLowerCase() === user.name.toLowerCase()
-  );
-}
 
 export async function POST(request) {
   const auth = await getSessionUserOrErrorResponse();
@@ -32,7 +26,7 @@ export async function POST(request) {
     return Response.json({ ok: false, error: "Appointment not found." }, { status: 404 });
   }
 
-  if (!ownsAppointment(auth.user, appointment)) {
+  if (!patientOwnsAppointment(auth.user, appointment)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -48,11 +42,19 @@ export async function POST(request) {
   const successUrl = `${origin}/patient/appointments/${appointment.id}?paid=1&session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${origin}/patient/appointments/${appointment.id}?paid=0`;
 
-  const session = await createAppointmentCheckoutSession({
-    appointment,
-    successUrl,
-    cancelUrl,
-  });
+  let session;
+  try {
+    session = await createAppointmentCheckoutSession({
+      appointment,
+      successUrl,
+      cancelUrl,
+    });
+  } catch {
+    return Response.json(
+      { ok: false, error: "Online payments are not available right now." },
+      { status: 503 }
+    );
+  }
 
   await prisma.appointment.update({
     where: { id: appointment.id },
@@ -61,3 +63,4 @@ export async function POST(request) {
 
   return Response.json({ ok: true, url: session.url });
 }
+

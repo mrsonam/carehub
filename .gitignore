@@ -43,6 +43,11 @@ next-env.d.ts
 # User manual — generated locally (see docs/superpowers/specs/2026-05-20-user-manual-design.md)
 docs/user-manual/CareHub-User-Manual.md
 docs/user-manual/CareHub-User-Manual.docx
+docs/installation/CareHub-Installation-Manual.docx
+docs/installation/assets/
+docs/technical-design/CareHub-Technical-Design.docx
+docs/technical-design/assets/
 docs/user-manual/assets/
 docs/user-manual/.cache/
 .impeccable
+docs

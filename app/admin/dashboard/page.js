@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { requireAdminUser } from "@/lib/auth-server";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -11,7 +10,6 @@ import {
   Stethoscope,
   CalendarCheck2,
 } from "lucide-react";
-import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Metric, PanelHead } from "../../components/dashboard/DashboardPanels";
 import { AppointmentStatusBadge } from "../../components/appointments/AppointmentStatusBadge";
@@ -106,11 +104,7 @@ async function loadAdminStats() {
 }
 
 export default async function AdminDashboard() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(getSessionCookieName())?.value;
-  const session = token ? await verifySessionToken(token).catch(() => null) : null;
-  if (!session) redirect("/login?next=/admin/dashboard");
-  if (session.role !== "ADMIN") redirect("/dashboard");
+  await requireAdminUser("/admin/dashboard");
 
   const stats = await loadAdminStats();
   const completionRate =

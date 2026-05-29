@@ -1,4 +1,6 @@
 import { getSessionUserOrErrorResponse } from "@/lib/auth-server";
+import { doctorHasSchedulingConflict } from "@/lib/booking/overlap";
+import { isScheduledSlotAvailable } from "@/lib/booking/slots";
 import { feeCentsForDuration, ALLOWED_DURATIONS } from "@/lib/payments/fees.js";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications/notifications";
@@ -18,11 +20,6 @@ const STATUSES = new Set([
   "COMPLETED",
   "NO_SHOW",
 ]);
-const ACTIVE_STATUSES = ["REQUESTED", "CONFIRMED", "ONGOING"];
-
-function rangesOverlap(startA, endA, startB, endB) {
-  return startA < endB && startB < endA;
-}
 
 export async function POST(request) {
   const auth = await getSessionUserOrErrorResponse();
@@ -94,28 +91,14 @@ export async function POST(request) {
       : "REQUESTED";
 
   if (doctor) {
-    const dayStart = new Date(scheduledAt);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(dayStart);
-    dayEnd.setDate(dayStart.getDate() + 1);
-    const activeAppointments = await prisma.appointment.findMany({
-      where: {
-        doctorId: doctor.id,
-        scheduledAt: { gte: dayStart, lt: dayEnd },
-        status: { in: ACTIVE_STATUSES },
-      },
-      select: { id: true, scheduledAt: true, durationMinutes: true },
+    const slotAvailable = await isScheduledSlotAvailable(prisma, {
+      doctorId: doctor.id,
+      scheduledAt,
+      durationMinutes,
     });
-    const requestedStart = scheduledAt.getTime();
-    const requestedEnd = requestedStart + durationMinutes * 60 * 1000;
-    const hasOverlap = activeAppointments.some((appt) => {
-      const start = appt.scheduledAt.getTime();
-      const end = start + (appt.durationMinutes || 15) * 60 * 1000;
-      return rangesOverlap(requestedStart, requestedEnd, start, end);
-    });
-    if (hasOverlap) {
+    if (!slotAvailable) {
       return Response.json(
-        { ok: false, error: "That time is no longer available. Please choose another slot." },
+        { ok: false, error: "That time is not available. Please choose another slot." },
         { status: 409 }
       );
     }
@@ -129,20 +112,44 @@ export async function POST(request) {
   const feeAmountCents = feeCentsForDuration(durationMinutes, schedule);
   const paymentStatus = "UNPAID";
 
-  const appointment = await prisma.appointment.create({
-    data: {
-      patientId: patient?.id ?? null,
-      doctorId: doctor?.id ?? null,
-      patientName,
-      doctorName: doctor?.name ?? cleanText(body.doctorName, null),
-      scheduledAt,
-      durationMinutes,
-      patientNotes: cleanText(body.patientNotes ?? body.notes, null) || null,
-      status,
-      feeAmountCents,
-      paymentStatus,
-    },
-  });
+  let appointment;
+  try {
+    appointment = await prisma.$transaction(async (tx) => {
+      if (doctor) {
+        const hasConflict = await doctorHasSchedulingConflict(tx, {
+          doctorId: doctor.id,
+          scheduledAt,
+          durationMinutes,
+        });
+        if (hasConflict) {
+          throw new Error("OVERLAP");
+        }
+      }
+
+      return tx.appointment.create({
+        data: {
+          patientId: patient?.id ?? null,
+          doctorId: doctor?.id ?? null,
+          patientName,
+          doctorName: doctor?.name ?? cleanText(body.doctorName, null),
+          scheduledAt,
+          durationMinutes,
+          patientNotes: cleanText(body.patientNotes ?? body.notes, null) || null,
+          status,
+          feeAmountCents,
+          paymentStatus,
+        },
+      });
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === "OVERLAP") {
+      return Response.json(
+        { ok: false, error: "That time is no longer available. Please choose another slot." },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 
   if (appointment.doctorId) {
     await createNotification({

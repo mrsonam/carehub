@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { dateKey, weekDays, addDays, startOfWeek } from "@/lib/calendar/dates";
+import { dateKey, weekDays, addDays, startOfWeek, formatWeekdayShort } from "@/lib/calendar/dates";
 
 const EASE = [0.23, 1, 0.32, 1];
 
@@ -58,7 +58,7 @@ export function DayStrip({
             const meta = getDayMeta(key);
             const selected = key === selectedDateKey;
             const disabled = Boolean(meta.disabled);
-            const weekday = day.toLocaleDateString(undefined, { weekday: "short" });
+            const weekday = formatWeekdayShort(day);
             return (
               <button
                 key={key}

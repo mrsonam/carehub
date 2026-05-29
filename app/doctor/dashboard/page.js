@@ -20,6 +20,7 @@ import {
   formatRelative,
   formatApptTime,
   formatTimeOnly,
+  formatMonthDayShort,
   greetingForHour,
 } from "@/lib/dashboard-format";
 import { DoctorVolumeChart } from "../../components/doctor/DoctorVolumeChart";
@@ -121,7 +122,7 @@ async function loadDoctorDashboard(user) {
     const end = new Date(now.getTime() - i * 7 * DAY_MS);
     const start = new Date(end.getTime() - 7 * DAY_MS);
     weeks.push({
-      label: startOfDay(start).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      label: formatMonthDayShort(start),
       start,
       end,
       count: 0,

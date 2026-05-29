@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { avatarDisplayUrl } from "@/lib/profile/avatar-url";
 import DoctorsPageClient from "./DoctorsPageClient";
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+import { WEEKDAY_LABELS_SHORT } from "@/lib/calendar/weekdays";
 
 function labelTime(minutes) {
   const hour = Math.floor(minutes / 60);
@@ -15,7 +15,7 @@ function labelTime(minutes) {
 function formatAvailability(rules) {
   if (!rules?.length) return "Not available";
   const first = rules[0];
-  return `${WEEKDAYS[first.weekday]} ${labelTime(first.startMinutes)} - ${labelTime(first.endMinutes)}`;
+  return `${WEEKDAY_LABELS_SHORT[first.weekday]} ${labelTime(first.startMinutes)} - ${labelTime(first.endMinutes)}`;
 }
 
 function mapCategory(title) {

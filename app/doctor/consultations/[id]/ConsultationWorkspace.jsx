@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, ClipboardPenLine, Pill, UserX } from "lucide-react";
+import { formatDateTimeMedium } from "@/lib/dashboard-format";
 import { useToast } from "@/app/components/toast/ToastProvider";
 
 function actionClass(tone) {
@@ -174,12 +175,7 @@ export function ConsultationWorkspace({ appointment }) {
             <div>
               <dt className="text-xs text-foreground/45">Appointment</dt>
               <dd className="font-medium">
-                {new Date(appointment.scheduledAt).toLocaleString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
+                {formatDateTimeMedium(appointment.scheduledAt)}
               </dd>
             </div>
           </dl>

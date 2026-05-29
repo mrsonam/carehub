@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSessionCookieName, verifySessionToken } from "@/lib/auth";
+import { autoCloseExpiredAppointments } from "@/lib/appointment-lifecycle";
+import { readSearchQuery } from "@/lib/dashboard-search";
 import { prisma } from "@/lib/prisma";
 import { formatApptTime } from "@/lib/dashboard-format";
 import { AppointmentBookingForm } from "../../components/appointments/AppointmentBookingForm";
@@ -22,6 +24,7 @@ export default async function PatientAppointmentsPage({ searchParams }) {
   const sp = await Promise.resolve(searchParams);
   const focus = sp?.focus;
   const bookWithDoctorId = typeof sp?.doctor === "string" ? sp.doctor : undefined;
+  const initialQuery = readSearchQuery(sp?.q);
 
   const cookieStore = await cookies();
   const token = cookieStore.get(getSessionCookieName())?.value;
@@ -36,6 +39,7 @@ export default async function PatientAppointmentsPage({ searchParams }) {
   if (!user) redirect("/login?next=/patient/appointments");
 
   const w = patientScope(user);
+  await autoCloseExpiredAppointments(prisma, w);
   const now = new Date();
   const terminalStatuses = ["CANCELLED", "COMPLETED", "NO_SHOW"];
 
@@ -79,6 +83,7 @@ export default async function PatientAppointmentsPage({ searchParams }) {
       <PatientAppointmentsWorkspace
         focus={focus}
         terminalStatuses={terminalStatuses}
+        initialQuery={initialQuery}
         upcoming={upcoming.map((row) => ({
           ...row,
           scheduledAt: row.scheduledAt.toISOString(),
